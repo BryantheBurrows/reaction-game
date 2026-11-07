@@ -1,0 +1,1736 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#12121f">
+  <meta name="description" content="Turn five randomly assigned news stories into one original fiction-writing prompt.">
+  <title>Plotline — Make a story of the day</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:ital,opsz,wght@1,9..144,600;1,9..144,700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: dark;
+      --paper: #12121f;
+      --white: #1d1b2b;
+      --ink: #f3efff;
+      --muted: #aaa5bb;
+      --line: #343044;
+      --orange: #f28a78;
+      --orange-pale: #432a3a;
+      --green: #9bc9bd;
+      --green-pale: #253b3e;
+      --mono: "DM Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+      --sans: "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --shadow: 0 18px 48px rgba(3, 3, 12, .26);
+    }
+
+    * { box-sizing: border-box; }
+    body { min-width: 320px; margin: 0; background: radial-gradient(ellipse at 87% 14%, rgba(139, 75, 92, .2), transparent 25rem), radial-gradient(ellipse at 8% 49%, rgba(73, 78, 142, .23), transparent 28rem), radial-gradient(ellipse at 83% 86%, rgba(53, 112, 103, .17), transparent 26rem), var(--paper); color: var(--ink); font-family: var(--sans); -webkit-font-smoothing: antialiased; }
+    button { color: inherit; font: inherit; }
+    button:focus-visible { outline: 3px solid rgba(242, 138, 120, .58); outline-offset: 3px; }
+    .app { width: min(1180px, 100%); margin: 0 auto; padding: 0 38px 48px; }
+    .topbar { height: 76px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(73, 66, 94, .72); }
+    .brand { display: inline-flex; align-items: center; gap: 10px; color: var(--ink); text-decoration: none; }
+    .brand-name { background: linear-gradient(110deg, #f4eaff 10%, #d7c8ff 38%, #ffd5c1 58%, #e9dcff 78%); background-size: 220% 100%; background-clip: text; color: transparent; font: italic 700 30px/1 "Fraunces", Georgia, serif; letter-spacing: -.065em; animation: wordmark-glimmer 9s ease-in-out infinite; }
+    .brand-spark { width: 12px; height: 12px; align-self: flex-start; margin: 0 0 0 -8px; color: #eac276; transform-origin: center; animation: logo-sparkle 3.2s ease-in-out infinite; }
+    .brand-mark { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 12px; background: linear-gradient(145deg, #a89cd6, #786ba8, #a89cd6); background-size: 180% 180%; color: #fff4dc; box-shadow: 0 5px 16px rgba(133, 116, 188, .24); transition: transform .3s cubic-bezier(.2, .8, .2, 1), box-shadow .3s; animation: book-drift 5s ease-in-out infinite; }
+    .brand-mark svg { width: 29px; height: 29px; overflow: visible; transition: transform .3s cubic-bezier(.2, .8, .2, 1); }
+    .brand:hover .brand-mark, .brand:focus-visible .brand-mark { transform: translateY(-3px) rotate(-7deg); box-shadow: 0 9px 22px rgba(153, 129, 219, .38); animation-play-state: paused; }
+    .brand:hover .brand-mark svg, .brand:focus-visible .brand-mark svg { transform: rotate(7deg) scale(1.08); }
+    .brand:hover .brand-name, .brand:focus-visible .brand-name { text-shadow: 0 0 20px rgba(220, 200, 255, .25); }
+    .topbar-right { display: flex; align-items: center; gap: 13px; }
+    .edition { color: var(--muted); font: 9px var(--mono); letter-spacing: .1em; text-transform: uppercase; }
+    .avatar { width: 33px; height: 33px; display: grid; place-items: center; border: 1px solid #51455d; border-radius: 50%; background: #312a3b; color: #e6c6b0; font-size: 10px; font-weight: 800; }
+    .account-button { display: inline-flex; min-height: 36px; align-items: center; gap: 8px; padding: 3px 10px 3px 4px; border: 1px solid #51455d; border-radius: 999px; background: #242132; color: var(--ink); font-size: 10px; font-weight: 700; cursor: pointer; }
+    .account-button .avatar { width: 27px; height: 27px; }
+    .intro { position: relative; display: flex; align-items: end; justify-content: space-between; gap: 25px; padding: 44px 0 30px; }
+    .intro-copy-block, .issue-stamp { position: relative; z-index: 1; }
+    .dream-art { position: absolute; top: 24px; right: 16%; width: 218px; height: 160px; color: #b6a8ee; opacity: .9; pointer-events: none; }
+    .dream-art svg { width: 100%; height: 100%; overflow: visible; }
+    .eyebrow { display: flex; align-items: center; gap: 8px; margin: 0 0 14px; color: var(--green); font: 9px var(--mono); letter-spacing: .12em; text-transform: uppercase; }
+    .eyebrow::before { width: 16px; height: 1px; background: var(--green); content: ""; }
+    h1 { max-width: 670px; margin: 0; font-size: clamp(32px, 5vw, 52px); font-weight: 600; letter-spacing: -.075em; line-height: 1.08; }
+    h1 span { color: var(--orange); }
+    .intro-copy { max-width: 365px; margin: 13px 0 0; color: #b0adbd; font-size: 12px; line-height: 1.8; }
+    .issue-stamp { display: grid; flex: 0 0 auto; justify-items: end; gap: 6px; padding-bottom: 4px; color: var(--muted); font: 9px var(--mono); letter-spacing: .07em; text-transform: uppercase; }
+    .issue-stamp strong { color: var(--ink); font: 600 11px var(--sans); letter-spacing: -.02em; text-transform: none; }
+    .workspace { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(350px, .95fr); gap: 18px; align-items: stretch; }
+    .card { min-width: 0; border: 1px solid rgba(74, 67, 94, .82); border-radius: 17px; background: rgba(27, 25, 42, .91); box-shadow: var(--shadow); backdrop-filter: blur(12px); }
+    .stories-card { overflow: hidden; }
+    .stories-controls { padding: 15px 22px 14px; border-bottom: 1px solid var(--line); }
+    .stories-controls .controls { display: grid; justify-content: stretch; gap: 9px; margin: 0; }
+    .card-heading { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 20px 22px 17px; border-bottom: 1px solid var(--line); }
+    .heading-title { display: flex; align-items: center; gap: 10px; }
+    h2 { margin: 0; font-size: 14px; font-weight: 700; letter-spacing: -.04em; }
+    .count { display: grid; width: 22px; height: 22px; place-items: center; border-radius: 7px; background: var(--orange-pale); color: #f2a28f; font: 10px var(--mono); }
+    .source-note { color: #aaa5b7; font: 8px var(--mono); letter-spacing: .03em; text-align: right; }
+    .story-list { padding: 2px 22px 4px; }
+    .story { display: grid; grid-template-columns: 28px minmax(0, 1fr) 22px; gap: 10px; align-items: start; padding: 15px 0 14px; border-bottom: 1px solid #343044; animation: appear .35s both; }
+    .story:last-child { border-bottom: 0; }
+    .story-number { padding-top: 2px; color: #9691a6; font: 9px var(--mono); }
+    .story-title { margin: 0; font-size: 12px; font-weight: 700; letter-spacing: -.025em; line-height: 1.55; }
+    .story-title a { color: inherit; text-decoration-color: transparent; text-underline-offset: 3px; transition: text-decoration-color .18s; }
+    .story-title a:hover { text-decoration-color: currentColor; }
+    .story-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; margin-top: 7px; color: #a7a2b3; font: 8px var(--mono); }
+    .story-category { padding: 3px 6px; border-radius: 4px; background: #302d3b; color: #c1bdcc; }
+    .story-category.world { background: #263d3c; color: #a8d1c3; }
+    .story-category.science { background: #292f4a; color: #bac6ed; }
+    .story-category.climate { background: #3b392b; color: #d7cd91; }
+    .story-category.culture { background: #432e38; color: #efb5a2; }
+    .story-category.satire { background: #3b3151; color: #d3bdf7; }
+    .story-state { padding: 28px 4px; color: #b1adbb; font-size: 11px; line-height: 1.7; }
+    .story-arrow { width: 16px; height: 16px; margin-top: 2px; color: #918ca1; }
+    .stories-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 13px 22px; border-top: 1px solid var(--line); background: rgba(24, 22, 38, .82); }
+    .assignment-note { display: flex; align-items: center; gap: 7px; color: #b1adbb; font-size: 9px; }
+    .assignment-note svg { width: 13px; height: 13px; color: var(--green); }
+    .shuffle-button { display: inline-flex; align-items: center; gap: 7px; padding: 8px 10px; border: 1px solid #49445a; border-radius: 8px; background: #252337; font-size: 9px; font-weight: 700; cursor: pointer; transition: border-color .2s, transform .2s; }
+    .shuffle-button:hover { transform: translateY(-1px); border-color: #817895; }
+    .shuffle-button svg { width: 13px; height: 13px; color: var(--green); }
+    .prompt-card { display: flex; flex-direction: column; padding: 22px; background: rgba(29, 26, 44, .9); }
+    .prompt-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+    .prompt-label { display: flex; align-items: center; gap: 7px; margin: 0 0 6px; color: var(--green); font: 9px var(--mono); letter-spacing: .1em; text-transform: uppercase; }
+    .prompt-label svg { width: 13px; height: 13px; }
+    .prompt-card h2 { font-size: 18px; letter-spacing: -.055em; }
+    .ready-pill { display: inline-flex; align-items: center; gap: 6px; padding: 6px 8px; border: 1px solid #3c514d; border-radius: 20px; color: #b3d4c2; font: italic 600 11px/1 "Fraunces", Georgia, serif; white-space: nowrap; }
+    .ready-dot { width: 5px; height: 5px; border-radius: 50%; background: #9bd19f; }
+    .ready-pill { cursor: pointer; transition: background .2s, border-color .2s, transform .2s; }
+    .ready-pill:hover { transform: translateY(-1px); border-color: #66867a; background: #24352f; }
+    .controls { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 18px 0 15px; }
+    .control-label { color: #aaa5b7; font: 8px var(--mono); letter-spacing: .06em; text-transform: uppercase; }
+    .genre-group { display: flex; flex-wrap: wrap; gap: 4px; padding: 3px; border: 1px solid #3c384c; border-radius: 9px; background: #171624; }
+    .genre-button { min-height: 30px; padding: 6px 9px; border: 0; border-radius: 6px; background: transparent; color: #b1adbd; font-size: 9px; font-weight: 700; cursor: pointer; }
+    .genre-button.active { background: #39344a; color: #fff9f1; box-shadow: 0 1px 4px rgba(4, 3, 12, .35); }
+    .prompt-output { position: relative; flex: 1; min-height: 260px; padding: 19px 19px 17px; border: 1px solid #3c384d; border-radius: 12px; background: rgba(21, 20, 33, .78); }
+    .prompt-kicker { margin: 0 0 12px; color: #aaa5b7; font: 8px var(--mono); letter-spacing: .1em; text-transform: uppercase; }
+    .prompt-text { margin: 0; color: #d1cdda; font-size: 12px; font-weight: 500; line-height: 1.85; }
+    .prompt-text strong { color: var(--ink); font-weight: 700; }
+    .prompt-hint { display: flex; align-items: flex-start; gap: 9px; margin-top: 16px; padding-top: 13px; border-top: 1px solid #393549; color: #aaa5b7; font-size: 9px; line-height: 1.7; }
+    .prompt-hint svg { width: 14px; height: 14px; flex: 0 0 14px; margin-top: 1px; color: var(--orange); }
+    .prompt-actions { display: flex; gap: 8px; margin-top: 14px; }
+    .generate-button, .copy-button { display: inline-flex; min-height: 40px; align-items: center; justify-content: center; gap: 8px; border-radius: 9px; font-size: 10px; font-weight: 700; cursor: pointer; transition: transform .18s, background .18s; }
+    .generate-button { flex: 1; border: 1px solid #e5a094; background: linear-gradient(110deg, #c96e77, #9e78bb); color: #fffaf8; }
+    .generate-button:hover { transform: translateY(-1px); background: linear-gradient(110deg, #db7c84, #ae86c9); }
+    .copy-button { padding: 0 13px; border: 1px solid #49445a; background: #252337; }
+    .copy-button:hover { background: #332f47; }
+    .generate-button svg, .copy-button svg { width: 14px; height: 14px; }
+    .below-note { display: flex; align-items: center; justify-content: center; gap: 7px; margin: 15px 0 0; color: #aaa5b7; font-size: 9px; }
+    .below-note svg { width: 12px; height: 12px; color: var(--green); }
+    .toast { position: fixed; right: 24px; bottom: 24px; z-index: 20; padding: 11px 15px; border: 1px solid #49445a; border-radius: 9px; background: #252337; box-shadow: 0 8px 24px rgba(3, 3, 12, .35); color: var(--ink); font-size: 11px; opacity: 0; pointer-events: none; transform: translateY(8px); transition: opacity .2s, transform .2s; }
+    .toast.visible { opacity: 1; transform: translateY(0); }
+    .page-footer { display: flex; justify-content: space-between; gap: 16px; margin-top: 18px; color: #aaa5b7; font-size: 8px; }
+    .page-footer span:last-child { font-family: var(--mono); }
+    .editor-backdrop { position: fixed; inset: 0; z-index: 10; display: none; align-items: center; justify-content: center; padding: 18px; background: rgba(8, 8, 16, .78); backdrop-filter: blur(10px); }
+    .editor-backdrop.open { display: flex; }
+    .editor-window { display: flex; width: min(1120px, 100%); height: min(850px, 96vh); min-height: 480px; flex-direction: column; overflow: hidden; border: 1px solid #dedbe4; border-radius: 18px; background: #f7f6f3; color: #292832; box-shadow: 0 30px 100px rgba(0, 0, 0, .45); }
+    .editor-header { display: flex; flex: 0 0 auto; align-items: center; justify-content: space-between; gap: 14px; padding: 15px 20px; border-bottom: 1px solid #e8e5e0; background: #fffefa; }
+    .editor-brand { display: flex; align-items: center; gap: 11px; }
+    .editor-brand-mark { display: grid; width: 32px; height: 32px; place-items: center; border-radius: 10px; background: #ece8f5; color: #786ba8; }
+    .editor-brand-mark svg { width: 17px; height: 17px; }
+    .editor-title-wrap { display: grid; gap: 3px; }
+    .editor-title { width: min(360px, 45vw); padding: 0; border: 0; outline: 0; background: transparent; color: #292832; font: 700 14px var(--sans); letter-spacing: -.035em; }
+    .editor-save-status { color: #898791; font: 9px var(--mono); }
+    .journal-bar { display: flex; min-height: 43px; flex: 0 0 auto; align-items: center; gap: 8px; padding: 6px 18px; border-bottom: 1px solid #e8e5e0; background: #faf9f6; }
+    .journal-bar label { color: #77747e; font: 9px var(--mono); }
+    .journal-local-hint { color: #85838b; font-size: 9px; }
+    .journal-bar select { min-width: 150px; max-width: 280px; height: 29px; padding: 0 8px; border: 1px solid #e1ded8; border-radius: 6px; background: #fffefa; color: #44424a; font: 10px var(--sans); }
+    .journal-bar .editor-quiet-button { min-height: 29px; padding: 0 9px; font-size: 9px; }
+    .journal-bar .journal-conflict { margin-left: auto; }
+    .account-backdrop { position: fixed; inset: 0; z-index: 16; display: none; align-items: center; justify-content: center; padding: 18px; background: rgba(8, 8, 16, .7); backdrop-filter: blur(7px); }
+    .account-backdrop.open { display: flex; }
+    .account-dialog { width: min(390px, 100%); padding: 24px; border: 1px solid #514a61; border-radius: 16px; background: #201e2d; color: var(--ink); box-shadow: 0 25px 80px rgba(0, 0, 0, .4); }
+    .account-dialog-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; }
+    .account-dialog h2 { margin: 0 0 7px; font-size: 18px; }
+    .account-dialog p { margin: 0 0 16px; color: #b6b1c2; font-size: 11px; line-height: 1.65; }
+    .account-dialog .editor-quiet-button { min-width: 34px; }
+    .account-dialog label { display: block; margin: 12px 0 5px; color: #d0ccda; font-size: 10px; font-weight: 700; }
+    .account-dialog input { width: 100%; height: 40px; padding: 0 11px; border: 1px solid #514a61; border-radius: 8px; background: #171622; color: var(--ink); font: 12px var(--sans); }
+    .account-dialog input:focus-visible { outline: 3px solid rgba(201, 168, 120, .4); outline-offset: 1px; }
+    .account-dialog-actions { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 16px; }
+    .account-dialog-actions .text-button { padding: 7px 0; border: 0; background: transparent; color: #d7c6f5; font-size: 10px; font-weight: 700; cursor: pointer; }
+    .account-error { min-height: 15px; margin: 10px 0 0 !important; color: #ffb3a5 !important; }
+    .account-user { padding: 14px; border: 1px solid #484357; border-radius: 9px; background: #292637; color: #e7e2ee; font-size: 11px; overflow-wrap: anywhere; }
+    .editor-header-actions, .editor-actions { display: flex; align-items: center; gap: 8px; }
+    .editor-quiet-button, .editor-primary-button { display: inline-flex; min-height: 35px; align-items: center; justify-content: center; gap: 7px; padding: 0 12px; border: 1px solid #e5e2dc; border-radius: 8px; background: #fffefa; color: #55545d; font-size: 10px; font-weight: 700; cursor: pointer; }
+    .editor-quiet-button:hover { background: #f3f1ec; }
+    .editor-primary-button { border-color: #30303b; background: #30303b; color: #fff; }
+    .editor-primary-button:hover { background: #474653; }
+    .editor-quiet-button svg, .editor-primary-button svg { width: 14px; height: 14px; }
+    .editor-close { width: 34px; min-width: 34px; padding: 0; font-size: 18px; }
+    .editor-toolbar { display: flex; flex: 0 0 auto; flex-wrap: wrap; align-items: center; gap: 5px; padding: 10px 18px; border-bottom: 1px solid #e8e5e0; background: #f2f1ed; }
+    .toolbar-divider { width: 1px; height: 23px; margin: 0 4px; background: #dbd8d1; }
+    .toolbar-button { display: grid; width: 31px; height: 30px; place-items: center; border: 1px solid transparent; border-radius: 6px; background: transparent; color: #4a4952; font-size: 13px; font-weight: 700; cursor: pointer; }
+    .toolbar-button:hover, .toolbar-button.active { border-color: #dfdcd5; background: #fffefa; }
+    .toolbar-button svg { width: 15px; height: 15px; }
+    .toolbar-select { height: 30px; padding: 0 8px; border: 1px solid #dfdcd5; border-radius: 6px; background: #fffefa; color: #4a4952; font: 10px var(--sans); }
+    .toolbar-color { width: 31px; height: 30px; padding: 4px; border: 1px solid transparent; border-radius: 6px; background: transparent; cursor: pointer; }
+    .toolbar-color:hover { border-color: #dfdcd5; background: #fffefa; }
+    .toolbar-color input { width: 100%; height: 100%; padding: 0; border: 0; background: transparent; cursor: pointer; }
+    .editor-scroll { flex: 1; overflow: auto; padding: 26px; background: #efeeeb; }
+    .writing-page { width: min(720px, 100%); min-height: 100%; margin: 0 auto; padding: 60px clamp(28px, 8vw, 88px); border: 1px solid #e8e5df; background: #fffefa; box-shadow: 0 5px 24px rgba(37, 35, 44, .07); }
+    .writing-prompt { margin: 0 0 25px; padding: 13px 15px; border-left: 2px solid #c99488; background: #f8f2ef; color: #70676a; font: 11px/1.7 var(--sans); }
+    .writing-body { min-height: 380px; outline: none; color: #34333b; font: 16px/1.85 Georgia, "Times New Roman", serif; overflow-wrap: anywhere; }
+    .writing-body:empty::before { color: #aaa7a1; content: "Once upon a headline..."; pointer-events: none; }
+    .writing-body h1, .writing-body h2, .writing-body h3 { color: #292832; font-family: var(--sans); }
+    .writing-body blockquote { margin: 1em 0; padding-left: 16px; border-left: 2px solid #c99488; color: #70676a; }
+    .writing-body img { max-width: 100%; }
+    .writing-body table { width: 100%; border-collapse: collapse; }
+    .writing-body td, .writing-body th { min-width: 70px; padding: 7px; border: 1px solid #d9d5cf; }
+    .editor-footer { display: flex; flex: 0 0 auto; align-items: center; justify-content: space-between; gap: 14px; padding: 11px 18px; border-top: 1px solid #e8e5e0; background: #fffefa; }
+    .editor-counts { color: #83818a; font: 9px var(--mono); white-space: nowrap; }
+    .social-actions { display: flex; align-items: center; gap: 7px; }
+    .social-label { margin-right: 3px; color: #85838b; font-size: 9px; }
+    .social-button { display: grid; width: 33px; height: 33px; place-items: center; border: 1px solid #e4e1dc; border-radius: 9px; background: #fffefa; color: #45434c; cursor: pointer; transition: transform .18s, background .18s; }
+    .social-button:hover { transform: translateY(-2px); background: #f2f0ec; }
+    .social-button svg { width: 17px; height: 17px; }
+    .social-button.facebook { color: #4267b2; }
+    .social-button.tiktok { color: #202027; }
+    .social-button.x-social { color: #202027; }
+    .social-button.instagram { color: #b34d79; }
+    .share-note { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
+    .share-backdrop { position: fixed; inset: 0; z-index: 12; display: none; align-items: center; justify-content: center; padding: 18px; background: rgba(8, 8, 16, .68); }
+    .share-backdrop.open { display: flex; }
+    .share-dialog { width: min(420px, 100%); padding: 24px; border: 1px solid #e5e2dc; border-radius: 16px; background: #fffefa; color: #292832; box-shadow: 0 25px 80px rgba(0, 0, 0, .34); }
+    .share-dialog h2 { margin: 0 0 8px; font-size: 18px; letter-spacing: -.04em; }
+    .share-dialog p { margin: 0 0 15px; color: #696872; font-size: 12px; line-height: 1.65; }
+    .share-dialog textarea { width: 100%; min-height: 130px; resize: vertical; padding: 12px; border: 1px solid #e1ded8; border-radius: 9px; background: #faf9f6; color: #34333b; font: 12px/1.6 var(--sans); }
+    .share-dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; }
+    .share-warning { display: block; margin-top: 12px; color: #85838b; font-size: 10px; line-height: 1.6; }
+    [hidden] { display: none !important; }
+    .action-backdrop { position: fixed; inset: 0; z-index: 14; display: none; align-items: center; justify-content: center; padding: 18px; background: rgba(8, 8, 16, .6); }
+    .action-backdrop.open { display: flex; }
+    .action-dialog { width: min(390px, 100%); padding: 22px; border: 1px solid #e5e2dc; border-radius: 15px; background: #fffefa; color: #292832; box-shadow: 0 25px 80px rgba(0, 0, 0, .34); }
+    .action-dialog h2 { margin: 0 0 7px; font-size: 17px; }
+    .action-dialog p { margin: 0 0 14px; color: #696872; font-size: 11px; line-height: 1.6; }
+    .action-dialog label { display: block; margin: 10px 0 5px; color: #57555e; font-size: 10px; font-weight: 700; }
+    .action-dialog input { width: 100%; height: 38px; padding: 0 10px; border: 1px solid #e1ded8; border-radius: 8px; background: #faf9f6; color: #34333b; font: 12px var(--sans); }
+    .action-dialog input:focus-visible, .share-dialog textarea:focus-visible, .share-dialog input:focus-visible { outline: 3px solid rgba(201, 110, 119, .35); outline-offset: 1px; }
+    .table-dimensions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .action-dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 17px; }
+
+    @keyframes appear { from { opacity: .35; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes book-drift { 0%, 100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-2px) rotate(-2deg); } }
+    @keyframes logo-sparkle { 0%, 70%, 100% { opacity: .75; transform: scale(.85) rotate(0); } 82% { opacity: 1; transform: scale(1.22) rotate(28deg); } }
+    @keyframes wordmark-glimmer { 0%, 18%, 100% { background-position: 0% 50%; } 55%, 72% { background-position: 100% 50%; } }
+    @media (max-width: 800px) {
+      .app { padding: 0 23px 34px; }
+      .workspace { grid-template-columns: minmax(0, 1fr) minmax(310px, .9fr); gap: 12px; }
+      .dream-art { right: 9%; }
+      .stories-controls { padding-right: 16px; padding-left: 16px; }
+      .card-heading, .story-list { padding-right: 16px; padding-left: 16px; }
+      .stories-footer { padding-right: 16px; padding-left: 16px; }
+      .prompt-card { padding: 18px; }
+      .genre-button { padding-right: 6px; padding-left: 6px; }
+    }
+    @media (max-width: 650px) {
+      .app { padding: 0 17px 28px; }
+      .topbar { height: 65px; }
+      .edition { font-size: 8px; }
+      .intro { align-items: flex-start; padding: 34px 0 23px; }
+      .intro { padding-top: 130px; }
+      .dream-art { top: 8px; right: calc(50% - 73px); width: 146px; height: 108px; opacity: .58; }
+      .intro-copy-block { max-width: 85%; }
+      .intro-copy { max-width: 320px; font-size: 11px; }
+      .issue-stamp { display: none; }
+      .workspace { grid-template-columns: 1fr; gap: 13px; }
+      .stories-controls { padding-right: 20px; padding-left: 20px; }
+      .prompt-card { min-height: 0; }
+      .prompt-output { min-height: 230px; }
+      .page-footer { flex-direction: column; gap: 6px; }
+    }
+    @media (max-width: 380px) {
+      .app { padding-right: 12px; padding-left: 12px; }
+      .card-heading { align-items: flex-start; flex-direction: column; gap: 7px; }
+      .source-note { text-align: left; }
+      .stories-controls { padding-right: 16px; padding-left: 16px; }
+      .genre-group { width: 100%; }
+      .genre-button { flex: 1; padding-right: 5px; padding-left: 5px; }
+      .assignment-note { font-size: 8px; }
+      .shuffle-button { padding: 8px; }
+      .shuffle-button span { display: none; }
+    }
+    @media (max-width: 650px) {
+      .editor-backdrop { padding: 0; }
+      .editor-window { width: 100%; height: 100dvh; min-height: 0; border: 0; border-radius: 0; }
+      .editor-header { padding: 11px 12px; }
+      .journal-bar { padding-right: 10px; padding-left: 10px; }
+      .journal-bar select { min-width: 100px; max-width: 38vw; }
+      .journal-bar .editor-quiet-button { padding: 0 6px; }
+      .editor-header-actions { gap: 5px; }
+      .editor-header-actions .editor-quiet-button:not(.editor-close) { width: 35px; padding: 0; font-size: 0; }
+      .editor-header-actions .editor-quiet-button:not(.editor-close) svg { width: 16px; height: 16px; }
+      .editor-title { width: min(185px, 42vw); font-size: 12px; }
+      .editor-save-status { font-size: 8px; }
+      .editor-toolbar { flex-wrap: nowrap; overflow-x: auto; padding: 8px 10px; }
+      .editor-scroll { padding: 12px; }
+      .writing-page { min-height: 100%; padding: 34px 22px; }
+      .writing-body { min-height: 56vh; font-size: 15px; }
+      .editor-footer { align-items: flex-start; flex-direction: column; padding: 10px 12px; }
+      .social-actions { width: 100%; justify-content: flex-end; }
+      .social-label { margin-right: auto; }
+      .share-dialog { padding: 20px; }
+    }
+    @media (prefers-reduced-transparency: reduce) {
+      .card { background: var(--white); backdrop-filter: none; }
+      .prompt-card { background: #1d1a2c; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="Plotline home">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 20 20" fill="none"><path d="M10 5.2c-1.6-1-3.5-1.4-6-1.1v10.5c2.4-.3 4.4.1 6 1.2m0-10.6c1.6-1 3.5-1.4 6-1.1v10.5c-2.4-.3-4.4.1-6 1.2m0-10.6v10.6" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/><path d="m15.9 2.2.6 1.5 1.5.6-1.5.6-.6 1.5-.6-1.5-1.5-.6 1.5-.6.6-1.5Z" fill="#f3ce91"/></svg>
+        </span>
+        <span class="brand-name">plotline</span>
+        <svg class="brand-spark" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M6 0.8 7.25 4.75 11.2 6 7.25 7.25 6 11.2 4.75 7.25.8 6 4.75 4.75 6 .8Z" fill="currentColor"/></svg>
+      </a>
+      <div class="topbar-right">
+        <span class="edition">The daily story edition</span>
+        <button class="account-button" id="account-button" type="button" aria-label="Sign in to sync your journal">
+          <span class="avatar" id="account-avatar" aria-hidden="true">?</span>
+          <span id="account-label">Sign in</span>
+        </button>
+      </div>
+    </header>
+
+    <main>
+      <section class="intro" aria-labelledby="page-title">
+        <div class="intro-copy-block">
+          <p class="eyebrow">A writing prompt, by way of the world</p>
+          <h1 id="page-title">The news is strange.<br><span>Your story can be stranger.</span></h1>
+          <p class="intro-copy" id="intro-description">Five stories from the day, randomly dealt. Find the thread between them and turn today's headlines into a world of your own.</p>
+        </div>
+        <div class="dream-art">
+          <svg viewBox="0 0 220 170" fill="none" role="img" aria-label="A stylish woman writer of color working on her laptop in a coffee shop">
+            <path d="M4 145c29-16 51-16 74-1 22 14 42 13 62-2 20-15 44-17 73-3" stroke="#897cae" stroke-opacity=".46" stroke-width="1.4" stroke-linecap="round" stroke-dasharray="2 6"/>
+            <ellipse cx="121" cy="152" rx="83" ry="8" fill="#181722" fill-opacity=".45"/>
+            <path d="M79 92c-13 9-22 26-25 46l-3 13h111l-5-22c-4-19-14-31-31-39" stroke="#a8a2b7" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M80 107c9 9 21 14 37 14s27-5 37-14m-65 3 8 41m52-41-8 41" stroke="#777183" stroke-width="1.2" stroke-linecap="round"/>
+            <path d="M93 88c7 6 15 9 24 9s17-3 24-9l-5 19H98l-5-19Z" stroke="#c3a78e" stroke-width="1.4" stroke-linejoin="round"/>
+            <path d="M88 46c0-20 12-33 30-33s30 13 30 33v24c0 20-12 33-30 33S88 90 88 70V46Z" fill="#795641" fill-opacity=".28" stroke="#d3ae8c" stroke-width="1.5"/>
+            <path d="M87 55c-9-5-12 1-10 9 1 7 5 10 12 10m57-19c9-5 12 1 10 9-1 7-5 10-12 10" stroke="#d3ae8c" stroke-width="1.3" stroke-linecap="round"/>
+            <path d="M86 46c-2-19 8-36 24-41 13-4 29 1 36 12 6 9 7 20 3 32-6-3-10-7-13-13-8 7-20 11-35 11l-9 12c-3-4-5-8-6-13Z" stroke="#c8b7aa" stroke-width="1.8" stroke-linejoin="round"/>
+            <path d="M89 36c4-15 16-24 30-24m6 2c10 2 17 8 21 17m-53-3c-7 4-11 10-13 18" stroke="#796b68" stroke-width="1.15" stroke-linecap="round"/>
+            <path d="M84 67c-7 5-9 14-5 21 3 5 7 7 12 7m62-28c7 5 9 14 5 21-3 5-7 7-12 7" stroke="#d7a977" stroke-width="1.3" stroke-linecap="round"/>
+            <path d="M97 57c5-4 11-4 16-1m14 0c5-3 11-3 16 1" stroke="#d9c8b8" stroke-width="1.55" stroke-linecap="round"/>
+            <path d="M101 62c3 2 7 2 10 0m17 0c3 2 7 2 10 0" stroke="#dbc8b8" stroke-width="1.35" stroke-linecap="round"/>
+            <circle cx="106" cy="62" r="1.35" fill="#e1c8a9"/>
+            <circle cx="134" cy="62" r="1.35" fill="#e1c8a9"/>
+            <path d="M120 63c0 7-4 12-4 15 2 2 5 2 8 0m-9 4c3 1 7 1 10-1" stroke="#dfb18a" stroke-width="1.25" stroke-linecap="round"/>
+            <path d="M110 91c6 3 14 3 20-1" stroke="#d7b294" stroke-width="1.25" stroke-linecap="round"/>
+            <path d="M94 61h-8m33 0h-4m34 0h-8m-21 0h-4" stroke="#d9c8b8" stroke-width="1"/>
+            <path d="M87 54c1-5 5-8 11-8h14c5 0 8 3 8 8v10c0 5-3 8-8 8H98c-6 0-10-3-10-8V54Zm34 0c0-5 3-8 8-8h14c6 0 10 3 10 8v10c0 5-4 8-10 8h-13c-6 0-9-3-9-8V54Z" stroke="#cbb89c" stroke-width="1.35"/>
+            <path d="M90 74c-2 9 1 17 8 22m53-22c2 9-1 17-8 22" stroke="#c6a889" stroke-width="1.2"/>
+            <path d="M82 71c-2 8-1 15 3 21m68-21c2 8 1 15-3 21" stroke="#d5aa74" stroke-width="1.7" stroke-linecap="round"/>
+            <path d="M79 73c-1 8 2 14 7 18m70-18c1 8-2 14-7 18" stroke="#b99b78" stroke-width="1" stroke-linecap="round"/>
+            <path d="M51 111h72l17 39H43l8-39Z" fill="#242631" stroke="#aeb4c2" stroke-width="1.6" stroke-linejoin="round"/>
+            <path d="m59 116 56 0 12 29H52l7-29Z" stroke="#697387" stroke-width="1.2" stroke-linejoin="round"/>
+            <path d="m67 123 6 0m7 0 6 0m7 0 6 0m7 0 6 0m-40 7 6 0m7 0 6 0m7 0 6 0m7 0 6 0m-36 7 6 0m7 0 6 0m7 0 6 0" stroke="#c3c6ce" stroke-opacity=".8" stroke-width="1.35" stroke-linecap="round"/>
+            <path d="M43 150h97l-7 5H37l6-5Z" fill="#858b99" stroke="#b6bbc3" stroke-width="1.15" stroke-linejoin="round"/>
+            <path d="m94 109 10 7 10-7m-17 5 7 5 7-5" stroke="#c2a48b" stroke-width="1.15" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="m39 107 11 2v22H37c-4 0-6-3-4-7l6-17Z" stroke="#b88870" stroke-width="1.45" stroke-linejoin="round"/>
+            <path d="M48 113h5c6 0 7 10 0 10h-5m-6-20c4 0 8 1 11 3m-10-7c4 0 8 1 11 3" stroke="#c4a58c" stroke-width="1.25" stroke-linecap="round"/>
+            <path d="M165 88c6-9 14-13 24-13m-4-8 8 8-8 8" stroke="#9184ae" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="m188 48 2.2 5.2 5.2 2.2-5.2 2.2-2.2 5.2-2.2-5.2-5.2-2.2 5.2-2.2 2.2-5.2Z" fill="#c9aa78"/>
+          </svg>
+        </div>
+        <div class="issue-stamp">
+          <span>Issue no. 024</span>
+          <strong id="issue-date"></strong>
+        </div>
+      </section>
+
+      <section class="workspace" aria-label="Today's stories and writing prompt">
+        <section class="card stories-card" aria-labelledby="stories-title">
+          <div class="stories-controls">
+            <div class="controls">
+              <span class="control-label">Set the mood</span>
+              <div class="genre-group" role="group" aria-label="Choose a story genre">
+                <button class="genre-button active" type="button" data-genre="Literary" aria-pressed="true">Literary</button>
+                <button class="genre-button" type="button" data-genre="Mystery" aria-pressed="false">Mystery</button>
+                <button class="genre-button" type="button" data-genre="Sci-fi" aria-pressed="false">Sci-fi</button>
+                <button class="genre-button" type="button" data-genre="Political satire" aria-pressed="false">Political satire</button>
+              </div>
+            </div>
+          </div>
+          <div class="card-heading">
+            <div class="heading-title">
+              <span class="count" id="story-count">05</span>
+              <h2 id="stories-title">Your five stories</h2>
+            </div>
+            <span class="source-note" id="feed-source-note">A fresh mix from today's feed</span>
+          </div>
+          <div class="story-list" id="story-list" aria-live="polite"></div>
+          <div class="stories-footer">
+            <span class="assignment-note">
+              <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 1.8v2.1m0 8.2v2.1M1.8 8h2.1m8.2 0h2.1M3.6 3.6l1.5 1.5m5.8 5.8 1.5 1.5m0-8.8L10.9 5.1m-5.8 5.8-1.5 1.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><circle cx="8" cy="8" r="2.1" stroke="currentColor" stroke-width="1.3"/></svg>
+              <span id="assignment-status">Randomly assigned just for you</span>
+            </span>
+            <button class="shuffle-button" id="shuffle-button" type="button" aria-label="Shuffle a new set of five stories">
+              <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M11 2.5h2.5V5M13.3 2.8 9.7 6.4M5.2 10.8l-2.7 2.7M11 13.5h2.5V11M13.3 13.2 9.7 9.6M2.5 3.2l2.7 2.7" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/><path d="M2.5 3.2h1.1c1 0 1.6.4 2.2 1.1l4.4 5.4c.6.7 1.2 1.1 2.2 1.1h1.1" stroke="currentColor" stroke-width="1.35" stroke-linecap="round"/></svg>
+              <span>Shuffle stories</span>
+            </button>
+          </div>
+        </section>
+
+        <section class="card prompt-card" aria-labelledby="prompt-title">
+          <div class="prompt-top">
+            <div>
+              <p class="prompt-label">
+                <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m8 1.5 1.55 4.95L14.5 8l-4.95 1.55L8 14.5 6.45 9.55 1.5 8l4.95-1.55L8 1.5Z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>
+                Your story starter
+              </p>
+              <h2 id="prompt-title">Make something of it.</h2>
+            </div>
+            <button class="ready-pill" id="open-editor" type="button" aria-label="Open writing document"><span class="ready-dot"></span>Ready to write</button>
+          </div>
+          <div class="prompt-output" aria-live="polite" aria-atomic="true">
+            <p class="prompt-kicker">A prompt stitched from your five</p>
+            <p class="prompt-text" id="prompt-text"></p>
+            <div class="prompt-hint">
+              <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 1.7v12.6M1.7 8h12.6M3.55 3.55l8.9 8.9m0-8.9-8.9 8.9" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+              <span>Use every headline as a story ingredient. Let one impossible connection change everything.</span>
+            </div>
+          </div>
+          <div class="prompt-actions">
+            <button class="generate-button" id="generate-button" type="button">
+              <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m8 1.5 1.55 4.95L14.5 8l-4.95 1.55L8 14.5 6.45 9.55 1.5 8l4.95-1.55L8 1.5Z" stroke="currentColor" stroke-width="1.25" stroke-linejoin="round"/></svg>
+              Generate a new prompt
+            </button>
+            <button class="copy-button" id="copy-button" type="button">
+              <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><rect x="5.2" y="5.2" width="8.1" height="8.1" rx="1.4" stroke="currentColor" stroke-width="1.2"/><path d="M10.8 5.1V3.9c0-.8-.6-1.4-1.4-1.4H3.9c-.8 0-1.4.6-1.4 1.4v5.5c0 .8.6 1.4 1.4 1.4h1.2" stroke="currentColor" stroke-width="1.2"/></svg>
+              Copy
+            </button>
+          </div>
+          <p class="below-note">
+            <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m8 1.5 5.1 2v3.7c0 3.2-2.1 5.8-5.1 7.3-3-1.5-5.1-4.1-5.1-7.3V3.5l5.1-2Z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="m5.8 7.8 1.5 1.5 3-3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Fiction inspired by the news, never a retelling.
+          </p>
+        </section>
+      </section>
+    </main>
+
+    <footer class="page-footer">
+      <span>Plotline is a little nudge to imagine what happens next.</span>
+      <span>DEMO EDITION · HEADLINES ARE ILLUSTRATIVE</span>
+    </footer>
+  </div>
+  <div class="editor-backdrop" id="editor-backdrop" role="dialog" aria-modal="true" aria-labelledby="editor-title">
+    <section class="editor-window">
+      <header class="editor-header">
+        <div class="editor-brand">
+          <span class="editor-brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 20 20" fill="none"><path d="M10 5.2c-1.6-1-3.5-1.4-6-1.1v10.5c2.4-.3 4.4.1 6 1.2m0-10.6c1.6-1 3.5-1.4 6-1.1v10.5c-2.4-.3-4.4.1-6 1.2m0-10.6v10.6" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/><path d="m15.9 2.2.6 1.5 1.5.6-1.5.6-.6 1.5-.6-1.5-1.5-.6 1.5-.6.6-1.5Z" fill="#c29470"/></svg>
+          </span>
+          <div class="editor-title-wrap">
+            <input class="editor-title" id="editor-title" type="text" maxlength="120" value="Untitled story" aria-label="Document title">
+            <span class="editor-save-status" id="editor-save-status" role="status">Saved on this device</span>
+          </div>
+        </div>
+        <div class="editor-header-actions">
+          <button class="editor-quiet-button" id="print-document" type="button" title="Print or save as PDF">
+            <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4.5 5V2.5h7V5m-7 6H3a1 1 0 0 1-1-1V6.5a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1V10a1 1 0 0 1-1 1h-1.5m-7 0v3h7v-3h-7Z" stroke="currentColor" stroke-width="1.25" stroke-linejoin="round"/><circle cx="11.5" cy="7.5" r=".7" fill="currentColor"/></svg>
+            <span>Print</span>
+          </button>
+          <button class="editor-quiet-button" id="download-document" type="button" title="Download an editable HTML document">
+            <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 2v8m0 0 3-3m-3 3L5 7m-2 5v1.5h10V12" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>Download</span>
+          </button>
+          <button class="editor-quiet-button editor-close" id="close-editor" type="button" aria-label="Close writing document">&times;</button>
+        </div>
+      </header>
+      <div class="journal-bar">
+        <label for="journal-entry-select">Journal</label>
+        <select id="journal-entry-select" aria-label="Choose a journal entry" hidden></select>
+        <button class="editor-quiet-button" id="new-entry" type="button" hidden>New entry</button>
+        <span class="journal-local-hint" id="journal-local-hint">Saved on this device only</span>
+        <button class="editor-quiet-button" id="journal-sign-in" type="button">Sync journal</button>
+        <button class="editor-quiet-button journal-conflict" id="use-cloud-copy" type="button" hidden>Use cloud version</button>
+        <button class="editor-quiet-button" id="keep-local-copy" type="button" hidden>Keep my edits</button>
+      </div>
+      <div class="editor-toolbar" role="toolbar" aria-label="Document formatting">
+        <button class="toolbar-button" type="button" data-command="undo" aria-label="Undo" title="Undo"><svg viewBox="0 0 16 16" fill="none"><path d="M6 4 2.5 7.2 6 10.5M3 7.3h5.2a4.3 4.3 0 0 1 4.3 4.2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <button class="toolbar-button" type="button" data-command="redo" aria-label="Redo" title="Redo"><svg viewBox="0 0 16 16" fill="none"><path d="m10 4 3.5 3.2-3.5 3.3M13 7.3H7.8a4.3 4.3 0 0 0-4.3 4.2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <span class="toolbar-divider" aria-hidden="true"></span>
+        <select class="toolbar-select" id="block-format" aria-label="Paragraph style">
+          <option value="P">Normal text</option><option value="H1">Heading 1</option><option value="H2">Heading 2</option><option value="H3">Heading 3</option><option value="BLOCKQUOTE">Quote</option>
+        </select>
+        <select class="toolbar-select" id="font-family" aria-label="Font family">
+          <option value="Georgia">Georgia</option><option value="Arial">Arial</option><option value="Verdana">Verdana</option><option value="Times New Roman">Times New Roman</option><option value="Courier New">Courier New</option>
+        </select>
+        <select class="toolbar-select" id="font-size" aria-label="Font size">
+          <option value="3">12 pt</option><option value="2">10 pt</option><option value="4">14 pt</option><option value="5">18 pt</option><option value="6">24 pt</option><option value="7">36 pt</option>
+        </select>
+        <span class="toolbar-divider" aria-hidden="true"></span>
+        <button class="toolbar-button" type="button" data-command="bold" aria-label="Bold" title="Bold"><strong>B</strong></button>
+        <button class="toolbar-button" type="button" data-command="italic" aria-label="Italic" title="Italic"><em>I</em></button>
+        <button class="toolbar-button" type="button" data-command="underline" aria-label="Underline" title="Underline"><u>U</u></button>
+        <button class="toolbar-button" type="button" data-command="strikeThrough" aria-label="Strikethrough" title="Strikethrough"><s>S</s></button>
+        <span class="toolbar-divider" aria-hidden="true"></span>
+        <button class="toolbar-button" type="button" data-command="justifyLeft" aria-label="Align left" title="Align left">≡</button>
+        <button class="toolbar-button" type="button" data-command="justifyCenter" aria-label="Center" title="Center">≣</button>
+        <button class="toolbar-button" type="button" data-command="justifyRight" aria-label="Align right" title="Align right">≡</button>
+        <button class="toolbar-button" type="button" data-command="insertUnorderedList" aria-label="Bulleted list" title="Bulleted list">•≡</button>
+        <button class="toolbar-button" type="button" data-command="insertOrderedList" aria-label="Numbered list" title="Numbered list">1≡</button>
+        <button class="toolbar-button" type="button" id="insert-link" aria-label="Insert link" title="Insert link"><svg viewBox="0 0 16 16" fill="none"><path d="m6.3 9.7 3.4-3.4M5.2 11.6l-1 .9a2.7 2.7 0 0 1-3.8-3.8l3.1-3.1a2.7 2.7 0 0 1 3.8 0m3.5-.9 1-.9a2.7 2.7 0 0 1 3.8 3.8l-3.1 3.1a2.7 2.7 0 0 1-3.8 0" transform="translate(1 0)" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg></button>
+        <button class="toolbar-button" type="button" id="insert-image" aria-label="Insert image from URL" title="Insert image from URL"><svg viewBox="0 0 16 16" fill="none"><rect x="2" y="2.5" width="12" height="11" rx="1.5" stroke="currentColor" stroke-width="1.2"/><circle cx="5.5" cy="6" r="1.2" stroke="currentColor" stroke-width="1.1"/><path d="m3 11 3.2-3 2.2 2 1.5-1.3 3.1 2.8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <button class="toolbar-button" type="button" id="insert-table" aria-label="Insert table" title="Insert table">▦</button>
+        <button class="toolbar-button" type="button" data-command="insertHorizontalRule" aria-label="Insert divider" title="Insert divider">―</button>
+        <button class="toolbar-button" type="button" data-command="removeFormat" aria-label="Clear formatting" title="Clear formatting">Tx</button>
+        <label class="toolbar-color" title="Text color"><input id="text-color" type="color" value="#34333b" aria-label="Text color"></label>
+        <label class="toolbar-color" title="Highlight color"><input id="highlight-color" type="color" value="#fff0a8" aria-label="Highlight color"></label>
+      </div>
+      <div class="editor-scroll">
+        <article class="writing-page">
+          <blockquote class="writing-prompt" id="writing-prompt"></blockquote>
+          <div class="writing-body" id="writing-body" contenteditable="true" role="textbox" aria-label="Write your story here" aria-multiline="true" spellcheck="true"></div>
+        </article>
+      </div>
+      <footer class="editor-footer">
+        <div class="editor-counts"><span id="word-count">0 words</span> · <span id="character-count">0 characters</span></div>
+        <div class="social-actions">
+          <span class="social-label">Share your story</span>
+          <button class="social-button facebook" type="button" data-platform="Facebook" aria-label="Share on Facebook" title="Share on Facebook">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13.5 21v-8.2h2.8l.4-3.2h-3.2v-2c0-.9.3-1.5 1.6-1.5h1.7V3.2c-.3 0-1.3-.1-2.5-.1-2.5 0-4.2 1.5-4.2 4.3v2.2H7.3v3.2h2.8V21h3.4Z"/></svg>
+          </button>
+          <button class="social-button tiktok" type="button" data-platform="TikTok" aria-label="Prepare story for TikTok" title="Prepare story for TikTok">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.6 8.2a7.1 7.1 0 0 1-4.4-1.5v7.1a6.1 6.1 0 1 1-5.3-6V11a2.8 2.8 0 1 0 2.1 2.7V2h3.2c.2 2.1 1.9 3.8 4.4 4v2.2Z"/></svg>
+          </button>
+          <button class="social-button x-social" type="button" data-platform="X" aria-label="Post on X" title="Post on X">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.9 2H22l-6.8 7.8L23.2 22h-6.3L12 14.6 5.5 22H2.4l7.3-8.4L1.8 2h6.4l4.4 6.9L18.9 2Zm-1.1 17.9h1.7L7.3 4H5.5l12.3 15.9Z"/></svg>
+          </button>
+          <button class="social-button instagram" type="button" data-platform="Instagram" aria-label="Prepare story for Instagram" title="Prepare story for Instagram">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="2"/><circle cx="17.5" cy="6.8" r="1.2" fill="currentColor"/></svg>
+          </button>
+        </div>
+      </footer>
+    </section>
+  </div>
+  <div class="share-backdrop" id="share-backdrop" role="dialog" aria-modal="true" aria-labelledby="share-title">
+    <section class="share-dialog">
+      <h2 id="share-title">Share your story</h2>
+      <p id="share-description"></p>
+      <textarea id="share-caption" aria-label="Story caption"></textarea>
+      <label id="share-link-label" class="share-warning" hidden for="share-link">Public story link for Facebook</label>
+      <input id="share-link" type="url" placeholder="https://…" hidden style="width:100%;margin-top:8px;padding:10px;border:1px solid #e1ded8;border-radius:8px;background:#faf9f6;color:#34333b">
+      <span class="share-warning" id="share-warning"></span>
+      <div class="share-dialog-actions">
+        <button class="editor-quiet-button" id="cancel-share" type="button">Cancel</button>
+        <button class="editor-quiet-button" id="copy-share" type="button">Copy story</button>
+        <button class="editor-primary-button" id="continue-share" type="button">Continue</button>
+      </div>
+    </section>
+  </div>
+  <div class="action-backdrop" id="action-backdrop" role="dialog" aria-modal="true" aria-labelledby="action-title">
+    <section class="action-dialog">
+      <h2 id="action-title">Insert link</h2>
+      <p id="action-description"></p>
+      <div id="action-url-field">
+        <label id="action-url-label" for="action-url">Secure URL</label>
+        <input id="action-url" type="url" placeholder="https://…">
+      </div>
+      <div class="table-dimensions" id="table-dimensions" hidden>
+        <div><label for="table-rows">Rows</label><input id="table-rows" type="number" min="1" max="10" value="3"></div>
+        <div><label for="table-columns">Columns</label><input id="table-columns" type="number" min="1" max="10" value="3"></div>
+      </div>
+      <div class="action-dialog-actions">
+        <button class="editor-quiet-button" id="cancel-action" type="button">Cancel</button>
+        <button class="editor-primary-button" id="confirm-action" type="button">Insert</button>
+      </div>
+    </section>
+  </div>
+  <div class="account-backdrop" id="account-backdrop" role="dialog" aria-modal="true" aria-labelledby="account-title">
+    <section class="account-dialog">
+      <div class="account-dialog-head">
+        <div>
+          <h2 id="account-title">Your Plotline journal</h2>
+          <p id="account-description">Sign in to save entries securely and sync them across your devices.</p>
+        </div>
+        <button class="editor-quiet-button" id="close-account" type="button" aria-label="Close account dialog">&times;</button>
+      </div>
+      <form id="auth-form">
+        <label for="auth-email">Email</label>
+        <input id="auth-email" type="email" autocomplete="email" required maxlength="254">
+        <label for="auth-password">Password</label>
+        <input id="auth-password" type="password" autocomplete="current-password" required minlength="6" maxlength="128">
+        <div class="account-dialog-actions">
+          <button class="text-button" id="toggle-auth-mode" type="button">Create an account</button>
+          <button class="editor-primary-button" id="auth-submit" type="submit">Sign in</button>
+        </div>
+      </form>
+      <div id="signed-in-panel" hidden>
+        <div class="account-user" id="signed-in-email"></div>
+        <div class="account-dialog-actions">
+          <span></span>
+          <button class="editor-primary-button" id="sign-out" type="button">Sign out</button>
+        </div>
+      </div>
+      <p class="account-error" id="auth-error" role="alert"></p>
+    </section>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+      projectId: "YOUR_PROJECT_ID",
+      appId: "YOUR_APP_ID"
+    };
+    const stories = [
+      { title: "A small town's library begins lending out seeds instead of overdue books", source: "The Daily Ledger", time: "8:42 AM", category: "Culture" },
+      { title: "Scientists map a hidden river flowing beneath the Antarctic ice", source: "Field Notes", time: "9:16 AM", category: "Science" },
+      { title: "Night train returns to the coast after a 40-year absence", source: "The Continental", time: "9:38 AM", category: "World" },
+      { title: "A mysterious radio signal repeats the same three notes at sunrise", source: "Signal Journal", time: "10:05 AM", category: "Science" },
+      { title: "City rooftops set aside for a new generation of urban gardens", source: "The Daily Ledger", time: "10:27 AM", category: "Climate" },
+      { title: "An amateur astronomer discovers a comet with an unusually green tail", source: "Field Notes", time: "10:41 AM", category: "Science" },
+      { title: "A decades-old time capsule is found inside a lighthouse wall", source: "The Continental", time: "11:03 AM", category: "Culture" },
+      { title: "Coastal village votes to give its newly restored wetlands legal rights", source: "The Daily Ledger", time: "11:22 AM", category: "Climate" },
+      { title: "A forgotten language returns to school lessons in mountain villages", source: "Field Notes", time: "11:46 AM", category: "World" },
+      { title: "Museum invites the public to help identify an unsigned portrait", source: "The Continental", time: "12:10 PM", category: "Culture" },
+      { title: "Researchers find a way to turn desert fog into drinking water", source: "Signal Journal", time: "12:36 PM", category: "Science" },
+      { title: "A flock of flamingos makes an unexpected stop in a city park", source: "The Daily Ledger", time: "1:04 PM", category: "World" }
+    ];
+
+    const openingLines = {
+      Literary: [
+        "Write a literary short story about a person who discovers that the headlines are quietly describing their own life.",
+        "Write a reflective story about two strangers whose lives begin to echo the day's headlines in ways neither can explain.",
+        "Write a quietly surprising story about a community trying to make sense of a day when every small event feels connected."
+      ],
+      Mystery: [
+        "Write a mystery in which a careful investigator realizes these unrelated headlines are pieces of the same impossible case.",
+        "Write a clever, atmospheric mystery that links the day's headlines to a disappearance no one noticed at first.",
+        "Write a small-town mystery where each headline reveals a new clue—and one person knows why."
+      ],
+      "Sci-fi": [
+        "Write a science-fiction story in which these five headlines are the first signs of a single, world-changing phenomenon.",
+        "Write a near-future story where an ordinary person discovers a hidden system connecting every one of these events.",
+        "Write a speculative story in which these headlines arrive from five different versions of the same future."
+      ],
+      "Political satire": [
+        "Write a sharp, humane political satire where a town's most ordinary problem becomes the subject of an increasingly grand campaign promise.",
+        "Write a playful political satire about a committee that can agree on every headline except what to call the committee.",
+        "Write a wry story about a fictional government that treats these absurd headlines as a perfectly reasonable policy agenda."
+      ]
+    };
+
+    const satireFeeds = [
+      { source: "The Onion", url: "https://theonion.com/feed/", host: "theonion.com" },
+      { source: "Babylon Bee", url: "https://babylonbee.com/feed/", host: "babylonbee.com" },
+      { source: "The Hard Times", url: "https://thehardtimes.net/feed/", host: "thehardtimes.net" },
+      { source: "The Daily Mash", url: "https://www.thedailymash.co.uk/feed/", host: "thedailymash.co.uk" }
+    ];
+    const politicalSignals = /\b(politic\w*|president\w*|white house|congress\w*|senat\w*|election\w*|democrat\w*|republican\w*|government\w*|minister\w*|parliament\w*|voter\w*|campaign\w*|trump|biden|prime minister|mayor\w*|governor\w*|supreme court|cabinet|party leader|mps?\b|lawmakers?)\b/i;
+    let assignedStories = [];
+    let selectedGenre = "Literary";
+    let promptIndex = 0;
+    let satireStories = [];
+    let satireLoading = false;
+    let satireRequestId = 0;
+    let toastTimer;
+    let saveTimer;
+    let savedSelection = null;
+    let firebaseAuth = null;
+    let firestore = null;
+    let currentUser = null;
+    let currentEntryId = null;
+    let currentEntries = [];
+    let currentEntryUnsubscribe = null;
+    let entryListUnsubscribe = null;
+    let pendingRemoteEntry = null;
+    let documentRevision = 0;
+    let savedRevision = 0;
+    let authMode = "signin";
+    let activeSharePlatform = "";
+    let activeShareButton = null;
+    const list = document.querySelector("#story-list");
+    const promptText = document.querySelector("#prompt-text");
+    const toast = document.querySelector("#toast");
+    const editorBackdrop = document.querySelector("#editor-backdrop");
+    const editorTitle = document.querySelector("#editor-title");
+    const writingBody = document.querySelector("#writing-body");
+    const writingPrompt = document.querySelector("#writing-prompt");
+    const editorSaveStatus = document.querySelector("#editor-save-status");
+    const shareBackdrop = document.querySelector("#share-backdrop");
+    const shareCaption = document.querySelector("#share-caption");
+    const shareLink = document.querySelector("#share-link");
+    const actionBackdrop = document.querySelector("#action-backdrop");
+    const accountBackdrop = document.querySelector("#account-backdrop");
+    const authForm = document.querySelector("#auth-form");
+    const authError = document.querySelector("#auth-error");
+    const accountButton = document.querySelector("#account-button");
+    const journalEntrySelect = document.querySelector("#journal-entry-select");
+    const newEntryButton = document.querySelector("#new-entry");
+    const useCloudCopyButton = document.querySelector("#use-cloud-copy");
+    const keepLocalCopyButton = document.querySelector("#keep-local-copy");
+    let activeAction = "";
+    let activeActionButton = null;
+
+    function chooseStories(source = stories, count = 5) {
+      const pool = [...source];
+      const chosen = [];
+      while (chosen.length < count && pool.length) {
+        const index = Math.floor(Math.random() * pool.length);
+        chosen.push(pool.splice(index, 1)[0]);
+      }
+      return chosen;
+    }
+
+    function renderStories() {
+      list.replaceChildren();
+      if (!assignedStories.length) {
+        const state = document.createElement("p");
+        state.className = "story-state";
+        state.setAttribute("role", satireLoading ? "status" : "alert");
+        state.textContent = satireLoading
+          ? "Gathering political satire from live publisher feeds…"
+          : selectedGenre === "Political satire"
+            ? "No political satire headlines could be loaded. Check your connection, then shuffle to try again."
+            : "No stories are available right now.";
+        list.append(state);
+        return;
+      }
+
+      assignedStories.forEach((story, index) => {
+        const item = document.createElement("article");
+        item.className = "story";
+        item.style.animationDelay = `${index * 35}ms`;
+        const number = document.createElement("span");
+        number.className = "story-number";
+        number.textContent = String(index + 1).padStart(2, "0");
+        const content = document.createElement("div");
+        const title = document.createElement("h3");
+        title.className = "story-title";
+        if (story.url) {
+          const titleLink = document.createElement("a");
+          titleLink.href = story.url;
+          titleLink.target = "_blank";
+          titleLink.rel = "noopener noreferrer";
+          titleLink.textContent = story.title;
+          title.append(titleLink);
+        } else {
+          title.textContent = story.title;
+        }
+        const meta = document.createElement("div");
+        meta.className = "story-meta";
+        const category = document.createElement("span");
+        category.className = `story-category ${story.category.toLowerCase()}`;
+        category.textContent = story.category;
+        const source = document.createElement("span");
+        if (story.sourceUrl) {
+          const sourceLink = document.createElement("a");
+          sourceLink.href = story.sourceUrl;
+          sourceLink.target = "_blank";
+          sourceLink.rel = "noopener noreferrer";
+          sourceLink.textContent = story.source;
+          source.append(sourceLink);
+        } else {
+          source.textContent = story.source;
+        }
+        const time = document.createElement("span");
+        time.textContent = story.time;
+        meta.append(category, source, time);
+        content.append(title, meta);
+        const arrow = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        arrow.setAttribute("class", "story-arrow");
+        arrow.setAttribute("viewBox", "0 0 16 16");
+        arrow.setAttribute("fill", "none");
+        arrow.setAttribute("aria-hidden", "true");
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        path.setAttribute("d", "M3 8h9m-3.5-3.5L12 8l-3.5 3.5");
+        path.setAttribute("stroke", "currentColor");
+        path.setAttribute("stroke-width", "1.2");
+        path.setAttribute("stroke-linecap", "round");
+        path.setAttribute("stroke-linejoin", "round");
+        arrow.append(path);
+        item.append(number, content, arrow);
+        list.append(item);
+      });
+    }
+
+    function renderPrompt() {
+      const opening = openingLines[selectedGenre];
+      document.querySelector(".prompt-kicker").textContent = selectedGenre === "Political satire"
+        ? "A prompt built from satire"
+        : "A prompt stitched from your five";
+      if (satireLoading && selectedGenre === "Political satire" && !assignedStories.length) {
+        promptText.textContent = "Pulling current satire from The Onion, Babylon Bee, The Hard Times, and The Daily Mash…";
+        return;
+      }
+      if (!assignedStories.length) {
+        promptText.textContent = "Load some headlines to generate your story prompt.";
+        return;
+      }
+      const lead = opening[promptIndex % opening.length];
+      const headlines = assignedStories.map(story => story.title);
+      const fragment = document.createDocumentFragment();
+      const intro = document.createElement("strong");
+      intro.textContent = lead;
+      fragment.append(intro, document.createTextNode(` Weave all ${headlines.length} ${selectedGenre === "Political satire" ? "satirical headlines" : "headlines"} into one fictional story: `));
+      headlines.forEach((headline, index) => {
+        const part = document.createElement("span");
+        part.textContent = `“${headline}”`;
+        const strong = document.createElement("strong");
+        strong.append(part);
+        fragment.append(strong);
+        if (index < headlines.length - 2) fragment.append(document.createTextNode("; "));
+        else if (index === headlines.length - 2) fragment.append(document.createTextNode("; and "));
+      });
+      fragment.append(document.createTextNode(`. Invent a character caught between them, find the surprising connection that links them all, and end with a choice that changes what happens next. ${selectedGenre === "Political satire" ? "Keep the targets fictional and the joke aimed at power. These publisher headlines are satire, not factual reporting." : "Borrow the headlines as inspiration—not as a retelling."}`));
+      promptText.replaceChildren(fragment);
+    }
+
+    function parseSatireFeed(xml, feed) {
+      const documentXml = new DOMParser().parseFromString(xml, "application/xml");
+      if (documentXml.querySelector("parsererror")) throw new Error(`${feed.source} returned an unreadable feed.`);
+
+      return [...documentXml.querySelectorAll("item, entry")].flatMap(item => {
+        const title = item.querySelector("title")?.textContent?.trim();
+        const linkElement = item.querySelector("link");
+        const rawLink = linkElement?.getAttribute("href") || linkElement?.textContent?.trim();
+        if (!title || !rawLink) return [];
+
+        let url;
+        try {
+          url = new URL(rawLink, feed.url);
+        } catch {
+          return [];
+        }
+        if (url.protocol !== "https:" || (url.hostname !== feed.host && !url.hostname.endsWith(`.${feed.host}`))) return [];
+
+        const categories = [...item.querySelectorAll("category")].map(category => category.textContent?.trim() || "");
+        if (!politicalSignals.test(`${title} ${categories.join(" ")}`)) return [];
+
+        const published = item.querySelector("pubDate, published, updated")?.textContent?.trim();
+        const parsedDate = published ? new Date(published) : null;
+        const time = parsedDate && !Number.isNaN(parsedDate.getTime())
+          ? new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(parsedDate)
+          : "Latest";
+
+        return [{
+          title,
+          source: feed.source,
+          sourceUrl: `https://${feed.host}/`,
+          url: url.href,
+          time,
+          category: "Satire"
+        }];
+      });
+    }
+
+    async function fetchSatireStories() {
+      const requestId = ++satireRequestId;
+      satireLoading = true;
+      assignedStories = [];
+      document.querySelector("#intro-description").textContent = "Five political-satire headlines, freshly pulled from independent comedy publishers. Read, laugh, then turn the absurdity into fiction.";
+      document.querySelector("#assignment-status").textContent = "Loading political satire from live feeds";
+      document.querySelector("#feed-source-note").textContent = "The Onion · Babylon Bee · The Hard Times · The Daily Mash";
+      renderStories();
+      renderPrompt();
+
+      const results = await Promise.allSettled(satireFeeds.map(async feed => {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 10000);
+        try {
+          const response = await fetch(feed.url, { signal: controller.signal, cache: "no-store" });
+          if (!response.ok) throw new Error(`${feed.source} feed returned HTTP ${response.status}.`);
+          return { feed, articles: parseSatireFeed(await response.text(), feed) };
+        } finally {
+          clearTimeout(timeout);
+        }
+      }));
+
+      if (requestId !== satireRequestId || selectedGenre !== "Political satire") return;
+      satireLoading = false;
+      const loaded = results.flatMap(result => result.status === "fulfilled" ? result.value.articles : []);
+      const failed = results.flatMap((result, index) => result.status === "rejected" ? [satireFeeds[index].source] : []);
+      const uniqueArticles = [...new Map(loaded.map(article => [article.url, article])).values()];
+      satireStories = uniqueArticles;
+      assignedStories = chooseStories(satireStories, 5);
+      promptIndex = 0;
+
+      if (!assignedStories.length) {
+        document.querySelector("#assignment-status").textContent = "Satire feeds unavailable · shuffle to retry";
+        document.querySelector("#feed-source-note").textContent = "Couldn't load satire feeds";
+        renderStories();
+        renderPrompt();
+        notify("Couldn't load political satire. Check your connection and shuffle to retry.");
+        return;
+      }
+
+      document.querySelector("#assignment-status").textContent = "Satire · headlines link to their publishers";
+      document.querySelector("#feed-source-note").textContent = failed.length
+        ? `Some feeds unavailable: ${failed.join(", ")}`
+        : "Live satire · from The Onion + other satire publishers";
+      renderStories();
+      renderPrompt();
+      if (assignedStories.length < 5) {
+        notify(`Only ${assignedStories.length} political satire headlines are available right now.`);
+      } else if (failed.length) {
+        notify(`Loaded satire headlines; unavailable feeds: ${failed.join(", ")}.`);
+      } else {
+        notify("Fresh political satire headlines loaded.");
+      }
+    }
+
+    function notify(message) {
+      toast.textContent = message;
+      toast.classList.add("visible");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove("visible"), 2300);
+    }
+
+    function updateDocumentCounts() {
+      const text = writingBody.innerText.trim();
+      const words = text.match(/[\p{L}\p{N}]+(?:['’][\p{L}\p{N}]+)*/gu) || [];
+      document.querySelector("#word-count").textContent = `${words.length} ${words.length === 1 ? "word" : "words"}`;
+      document.querySelector("#character-count").textContent = `${text.length} ${text.length === 1 ? "character" : "characters"}`;
+    }
+
+    function sanitizeContent(html) {
+      const template = document.createElement("template");
+      template.innerHTML = html;
+      const allowedTags = new Set(["A", "B", "BLOCKQUOTE", "BR", "DIV", "EM", "FONT", "H1", "H2", "H3", "HR", "I", "IMG", "LI", "OL", "P", "S", "SPAN", "STRIKE", "STRONG", "SUB", "SUP", "TABLE", "TBODY", "TD", "TH", "THEAD", "TR", "U", "UL"]);
+      const blockedTags = new Set(["IFRAME", "OBJECT", "SCRIPT", "STYLE", "SVG", "VIDEO", "AUDIO"]);
+      const allowedAttributes = new Set(["alt", "align", "colspan", "color", "face", "height", "href", "rowspan", "size", "src", "title", "width"]);
+      const allowedStyles = new Set(["background-color", "color", "font-family", "font-size", "font-style", "font-weight", "text-align", "text-decoration"]);
+
+      function clean(parent) {
+        for (const child of [...parent.children]) {
+          clean(child);
+          if (!allowedTags.has(child.tagName)) {
+            if (blockedTags.has(child.tagName)) child.remove();
+            else child.replaceWith(...child.childNodes);
+            continue;
+          }
+          for (const attribute of [...child.attributes]) {
+            if (attribute.name === "style") {
+              const declarations = [...child.style].filter(property => {
+                const value = child.style.getPropertyValue(property);
+                return allowedStyles.has(property) && !/(url\s*\(|expression|javascript:|[<>])/i.test(value);
+              }).map(property => `${property}:${child.style.getPropertyValue(property)}`);
+              child.removeAttribute("style");
+              if (declarations.length) child.setAttribute("style", declarations.join(";"));
+              continue;
+            }
+            if (!allowedAttributes.has(attribute.name.toLowerCase())) {
+              child.removeAttribute(attribute.name);
+              continue;
+            }
+            if (attribute.name === "href" && !/^(https:\/\/|http:\/\/|mailto:)/i.test(attribute.value.trim())) child.removeAttribute(attribute.name);
+            if (attribute.name === "src" && !/^https:\/\//i.test(attribute.value.trim())) child.remove();
+          }
+        }
+      }
+
+      clean(template.content);
+      return template.innerHTML;
+    }
+
+    function readLocalDraft() {
+      try {
+        const draft = JSON.parse(localStorage.getItem("plotline-writing-document") || "null");
+        return draft && typeof draft === "object" ? {
+          title: typeof draft.title === "string" ? draft.title : "Untitled story",
+          content: typeof draft.content === "string" ? sanitizeContent(draft.content) : ""
+        } : null;
+      } catch {
+        editorSaveStatus.textContent = "Local draft storage is unavailable";
+        editorSaveStatus.style.color = "#a34d4d";
+        return null;
+      }
+    }
+
+    function setAccountUi(user) {
+      const label = document.querySelector("#account-label");
+      const avatar = document.querySelector("#account-avatar");
+      const email = user?.email || "";
+      label.textContent = email || "Sign in";
+      avatar.textContent = email ? email.trim().charAt(0).toUpperCase() : "?";
+      accountButton.setAttribute("aria-label", email ? `Account: ${email}` : "Sign in to sync your journal");
+      document.querySelector("#signed-in-email").textContent = email;
+      document.querySelector("#auth-form").hidden = Boolean(user);
+      document.querySelector("#signed-in-panel").hidden = !user;
+      document.querySelector("#account-description").textContent = user
+        ? "Your journal is private to your account and syncs across your devices."
+        : "Sign in to save entries securely and sync them across your devices.";
+    }
+
+    function firebaseConfigured() {
+      return firebaseConfig.apiKey !== "YOUR_API_KEY"
+        && firebaseConfig.projectId !== "YOUR_PROJECT_ID"
+        && firebaseConfig.appId !== "YOUR_APP_ID";
+    }
+
+    function firebaseSetupError() {
+      if (!window.firebase) return "Firebase SDK did not load. Check your connection and reload.";
+      if (!firebaseConfigured()) return "Firebase is not configured yet. Add your web app config and follow FIREBASE_SETUP.md.";
+      return "";
+    }
+
+    function openAccountDialog() {
+      authError.textContent = "";
+      accountBackdrop.classList.add("open");
+      setAccountUi(currentUser);
+      if (!currentUser && !firebaseConfigured()) authError.textContent = "Set up Firebase using FIREBASE_SETUP.md before creating an account.";
+      requestAnimationFrame(() => (currentUser ? document.querySelector("#sign-out") : document.querySelector("#auth-email")).focus());
+    }
+
+    function closeAccountDialog() {
+      accountBackdrop.classList.remove("open");
+      accountButton.focus();
+    }
+
+    function renderJournalEntries() {
+      journalEntrySelect.replaceChildren();
+      currentEntries.forEach(entry => {
+        const option = document.createElement("option");
+        option.value = entry.id;
+        option.textContent = entry.title || "Untitled story";
+        journalEntrySelect.append(option);
+      });
+      journalEntrySelect.hidden = !currentUser || currentEntries.length === 0;
+      newEntryButton.hidden = !currentUser;
+      document.querySelector("#journal-local-hint").hidden = Boolean(currentUser);
+      document.querySelector("#journal-sign-in").hidden = Boolean(currentUser);
+      journalEntrySelect.value = currentEntryId || "";
+    }
+
+    function applyJournalEntry(entry) {
+      currentEntryId = entry.id;
+      editorTitle.value = entry.title || "Untitled story";
+      writingBody.innerHTML = sanitizeContent(entry.content || "");
+      documentRevision += 1;
+      savedRevision = documentRevision;
+      pendingRemoteEntry = null;
+      useCloudCopyButton.hidden = true;
+      keepLocalCopyButton.hidden = true;
+      editorSaveStatus.textContent = "Synced to your journal";
+      editorSaveStatus.style.color = "#517b68";
+      updateDocumentCounts();
+      renderJournalEntries();
+    }
+
+    function observeCurrentEntry(entryId) {
+      currentEntryUnsubscribe?.();
+      currentEntryUnsubscribe = null;
+      if (!firestore || !currentUser || !entryId) return;
+      currentEntryUnsubscribe = firestore.collection("users").doc(currentUser.uid).collection("entries").doc(entryId)
+        .onSnapshot(snapshot => {
+          if (!snapshot.exists || currentEntryId !== entryId) return;
+          const remote = { id: snapshot.id, ...snapshot.data() };
+          if (remote.title === editorTitle.value && sanitizeContent(remote.content || "") === sanitizeContent(writingBody.innerHTML)) return;
+          if (documentRevision !== savedRevision) {
+            pendingRemoteEntry = remote;
+            editorSaveStatus.textContent = "Changed on another device";
+            editorSaveStatus.style.color = "#a34d4d";
+            useCloudCopyButton.hidden = false;
+            keepLocalCopyButton.hidden = false;
+            return;
+          }
+          applyJournalEntry(remote);
+        }, error => {
+          editorSaveStatus.textContent = "Journal sync error";
+          editorSaveStatus.style.color = "#a34d4d";
+          notify(`Couldn't watch this journal entry: ${error.message}`);
+        });
+    }
+
+    async function loadJournalEntry(entryId) {
+      if (!currentUser || !firestore) return;
+      try {
+        const snapshot = await firestore.collection("users").doc(currentUser.uid).collection("entries").doc(entryId).get();
+        if (!snapshot.exists) throw new Error("That journal entry no longer exists.");
+        const entry = { id: snapshot.id, ...snapshot.data() };
+        applyJournalEntry(entry);
+        observeCurrentEntry(entryId);
+      } catch (error) {
+        editorSaveStatus.textContent = "Couldn't load journal entry";
+        editorSaveStatus.style.color = "#a34d4d";
+        notify(`Couldn't load that journal entry: ${error.message}`);
+      }
+    }
+
+    async function createJournalEntry(initial = null) {
+      if (!currentUser || !firestore) {
+        notify("Sign in after Firebase setup to create synced journal entries.");
+        return;
+      }
+      try {
+        const collection = firestore.collection("users").doc(currentUser.uid).collection("entries");
+        const ref = collection.doc();
+        const entry = {
+          title: initial?.title || "Untitled story",
+          content: initial?.content || "",
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+        await ref.set(entry);
+        const localEntry = { ...entry, id: ref.id };
+        currentEntries.unshift(localEntry);
+        applyJournalEntry(localEntry);
+        observeCurrentEntry(ref.id);
+        notify("New journal entry created.");
+      } catch (error) {
+        editorSaveStatus.textContent = "Couldn't create journal entry";
+        editorSaveStatus.style.color = "#a34d4d";
+        notify(`Couldn't create a journal entry: ${error.message}`);
+      }
+    }
+
+    async function loadUserJournal(user) {
+      editorSaveStatus.textContent = "Loading your journal…";
+      try {
+        const collection = firestore.collection("users").doc(user.uid).collection("entries");
+        entryListUnsubscribe?.();
+        entryListUnsubscribe = collection.onSnapshot(snapshot => {
+          currentEntries = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          currentEntries.sort((a, b) => (b.updatedAt?.toMillis?.() || 0) - (a.updatedAt?.toMillis?.() || 0));
+          renderJournalEntries();
+        }, error => {
+          editorSaveStatus.textContent = "Journal list sync error";
+          editorSaveStatus.style.color = "#a34d4d";
+          notify(`Couldn't sync the journal list: ${error.message}`);
+        });
+        const snapshot = await collection.get();
+        currentEntries = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        currentEntries.sort((a, b) => (b.updatedAt?.toMillis?.() || 0) - (a.updatedAt?.toMillis?.() || 0));
+        const localDraft = readLocalDraft();
+        const hasLocalWriting = localDraft && (localDraft.content.trim() || localDraft.title !== "Untitled story");
+        let draftAlreadyMigrated = false;
+        try {
+          draftAlreadyMigrated = localStorage.getItem(`plotline-migrated-draft-${user.uid}`) === "true";
+        } catch {
+          editorSaveStatus.textContent = "Local draft migration marker unavailable";
+        }
+        if (hasLocalWriting && !draftAlreadyMigrated) {
+          await createJournalEntry(localDraft);
+          try {
+            localStorage.setItem(`plotline-migrated-draft-${user.uid}`, "true");
+          } catch {
+            notify("The draft was imported, but this browser couldn't record the migration marker.");
+          }
+          return;
+        }
+        if (currentEntries.length) {
+          renderJournalEntries();
+          await loadJournalEntry(currentEntries[0].id);
+          return;
+        }
+        await createJournalEntry(localDraft);
+      } catch (error) {
+        editorSaveStatus.textContent = "Couldn't load your journal";
+        editorSaveStatus.style.color = "#a34d4d";
+        notify(`Couldn't load your journal: ${error.message}`);
+      }
+    }
+
+    async function saveDocument() {
+      const entry = {
+        title: editorTitle.value.trim() || "Untitled story",
+        content: sanitizeContent(writingBody.innerHTML)
+      };
+      try {
+        localStorage.setItem("plotline-writing-document", JSON.stringify({ ...entry, savedAt: new Date().toISOString() }));
+      } catch {
+        if (!currentUser) {
+          editorSaveStatus.textContent = "Couldn't save on this device";
+          editorSaveStatus.style.color = "#a34d4d";
+          return;
+        }
+      }
+      if (!currentUser || !firestore || !currentEntryId) {
+        editorSaveStatus.textContent = "Saved on this device";
+        editorSaveStatus.style.color = "#898791";
+        return;
+      }
+      if (pendingRemoteEntry) {
+        editorSaveStatus.textContent = "Resolve the other-device update before saving";
+        editorSaveStatus.style.color = "#a34d4d";
+        return;
+      }
+      const revision = documentRevision;
+      editorSaveStatus.textContent = "Syncing…";
+      editorSaveStatus.style.color = "#898791";
+      try {
+        if (new Blob([entry.content]).size > 750000) throw new Error("This entry is too large to sync. Reduce it to under 750 KB.");
+        await firestore.collection("users").doc(currentUser.uid).collection("entries").doc(currentEntryId).set({
+          ...entry,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+        const savedEntry = currentEntries.find(item => item.id === currentEntryId);
+        if (savedEntry) savedEntry.title = entry.title;
+        renderJournalEntries();
+        if (documentRevision === revision) {
+          savedRevision = revision;
+          editorSaveStatus.textContent = "Synced to your journal";
+          editorSaveStatus.style.color = "#517b68";
+        } else {
+          editorSaveStatus.textContent = "More edits are waiting to sync";
+          editorSaveStatus.style.color = "#898791";
+        }
+      } catch (error) {
+        editorSaveStatus.textContent = "Cloud save failed";
+        editorSaveStatus.style.color = "#a34d4d";
+        notify(`Couldn't sync this entry: ${error.message}`);
+      }
+    }
+
+    function scheduleSave() {
+      editorSaveStatus.textContent = "Saving…";
+      documentRevision += 1;
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(saveDocument, 300);
+      updateDocumentCounts();
+    }
+
+    function openEditor() {
+      if (currentUser && !currentEntryId) {
+        notify("Your journal is still loading. Please try again in a moment.");
+        return;
+      }
+      if (!currentUser) {
+        const draft = readLocalDraft();
+        if (draft) {
+          editorTitle.value = draft.title;
+          writingBody.innerHTML = draft.content;
+        }
+        editorSaveStatus.textContent = "Saved on this device";
+        editorSaveStatus.style.color = "";
+      }
+      writingPrompt.textContent = promptText.innerText;
+      editorBackdrop.classList.add("open");
+      document.body.style.overflow = "hidden";
+      updateDocumentCounts();
+      requestAnimationFrame(() => writingBody.focus());
+    }
+
+    function closeEditor() {
+      closeShareDialog();
+      closeActionDialog();
+      saveDocument();
+      editorBackdrop.classList.remove("open");
+      document.body.style.overflow = "";
+      document.querySelector("#open-editor").focus();
+    }
+
+    function rememberSelection() {
+      const selection = window.getSelection();
+      if (selection && selection.rangeCount && writingBody.contains(selection.anchorNode)) {
+        savedSelection = selection.getRangeAt(0).cloneRange();
+      }
+    }
+
+    function restoreSelection() {
+      if (!savedSelection) {
+        writingBody.focus();
+        return;
+      }
+      const selection = window.getSelection();
+      writingBody.focus();
+      selection.removeAllRanges();
+      selection.addRange(savedSelection);
+    }
+
+    function runEditorCommand(command, value = null) {
+      restoreSelection();
+      document.execCommand(command, false, value);
+      rememberSelection();
+      scheduleSave();
+    }
+
+    function escapeHtml(value) {
+      return value.replace(/[&<>"']/g, character => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      })[character]);
+    }
+
+    function documentHtml() {
+      const title = editorTitle.value.trim() || "Untitled story";
+      return `<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>${escapeHtml(title)}</title>
+<style>body{max-width:720px;margin:60px auto;padding:0 24px;color:#34333b;font:16px/1.85 Georgia,"Times New Roman",serif}h1{font:700 28px Arial,sans-serif}.prompt{padding:13px 15px;border-left:2px solid #c99488;background:#f8f2ef;color:#70676a;font:13px/1.7 Arial,sans-serif}.story{min-height:300px}table{width:100%;border-collapse:collapse}td,th{padding:7px;border:1px solid #d9d5cf}</style>
+</head><body><main><h1>${escapeHtml(title)}</h1><blockquote class="prompt">${escapeHtml(writingPrompt.textContent)}</blockquote><article class="story">${sanitizeContent(writingBody.innerHTML)}</article></main></body></html>`;
+    }
+
+    function downloadDocument() {
+      const blob = new Blob([documentHtml()], { type: "application/msword;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      const safeName = (editorTitle.value.trim() || "untitled-story").replace(/[^\p{L}\p{N}-]+/gu, "-").replace(/^-|-$/g, "").toLowerCase() || "untitled-story";
+      link.href = url;
+      link.download = `${safeName}.doc`;
+      document.body.append(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      notify("Word-compatible document downloaded.");
+    }
+
+    function printDocument() {
+      const printWindow = window.open("", "_blank");
+      if (!printWindow) {
+        notify("Allow pop-ups to print or save your story as a PDF.");
+        return;
+      }
+      printWindow.document.open();
+      printWindow.document.write(documentHtml());
+      printWindow.document.close();
+      printWindow.addEventListener("load", () => printWindow.print(), { once: true });
+    }
+
+    async function copyText(text) {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch {
+        const field = document.createElement("textarea");
+        field.value = text;
+        field.setAttribute("readonly", "");
+        field.style.position = "fixed";
+        field.style.opacity = "0";
+        document.body.append(field);
+        field.select();
+        const copied = document.execCommand("copy");
+        field.remove();
+        return copied;
+      }
+    }
+
+    function storyText() {
+      const title = editorTitle.value.trim();
+      const content = writingBody.innerText.trim();
+      return [title, content].filter(Boolean).join("\n\n");
+    }
+
+    function closeShareDialog() {
+      shareBackdrop.classList.remove("open");
+      activeShareButton?.focus();
+    }
+
+    function openActionDialog(action, button) {
+      activeAction = action;
+      activeActionButton = button;
+      const isTable = action === "table";
+      document.querySelector("#action-title").textContent = isTable ? "Insert a table" : action === "link" ? "Insert a link" : "Insert an image";
+      document.querySelector("#action-description").textContent = isTable
+        ? "Choose a size for your table. You can edit the cells after inserting it."
+        : action === "link"
+          ? "Add a secure web link or an email address to the selected text."
+          : "Add an image from a secure public URL.";
+      document.querySelector("#action-url-field").hidden = isTable;
+      document.querySelector("#table-dimensions").hidden = !isTable;
+      document.querySelector("#action-url-label").textContent = action === "link" ? "Link URL" : "Image URL";
+      document.querySelector("#action-url").value = "";
+      actionBackdrop.classList.add("open");
+      requestAnimationFrame(() => (isTable ? document.querySelector("#table-rows") : document.querySelector("#action-url")).focus());
+    }
+
+    function closeActionDialog() {
+      actionBackdrop.classList.remove("open");
+      activeActionButton?.focus();
+    }
+
+    function confirmActionDialog() {
+      if (activeAction === "table") {
+        const rows = document.querySelector("#table-rows").valueAsNumber;
+        const columns = document.querySelector("#table-columns").valueAsNumber;
+        if (!Number.isInteger(rows) || rows < 1 || rows > 10 || !Number.isInteger(columns) || columns < 1 || columns > 10) {
+          notify("Choose between 1 and 10 rows and columns.");
+          return;
+        }
+        const table = `<table><tbody>${Array.from({ length: rows }, () => `<tr>${Array.from({ length: columns }, () => "<td><br></td>").join("")}</tr>`).join("")}</tbody></table><p><br></p>`;
+        closeActionDialog();
+        runEditorCommand("insertHTML", table);
+        return;
+      }
+
+      const url = document.querySelector("#action-url").value.trim();
+      const isValid = activeAction === "link"
+        ? /^(https:\/\/|mailto:)/i.test(url)
+        : /^https:\/\//i.test(url);
+      if (!isValid) {
+        notify(activeAction === "link" ? "Use a secure https:// link or a mailto: address." : "Images must use a secure https:// URL.");
+        document.querySelector("#action-url").focus();
+        return;
+      }
+      const command = activeAction === "link" ? "createLink" : "insertImage";
+      closeActionDialog();
+      runEditorCommand(command, url);
+    }
+
+    function openShareDialog(platform) {
+      activeSharePlatform = platform;
+      activeShareButton = document.activeElement;
+      document.querySelector("#share-title").textContent = `Share on ${platform}`;
+      document.querySelector("#share-description").textContent = platform === "Facebook"
+        ? "Facebook sharing needs a public link to your story. Copy your story here, then add a link if you have published it online."
+        : platform === "X"
+          ? "Review your story text. X will open a post composer; long stories may need editing to fit."
+          : `Copy your story, then continue to ${platform} to create a post in the app or website. Web pages cannot publish directly to ${platform}.`;
+      document.querySelector("#share-warning").textContent = platform === "Facebook"
+        ? "Only a public web link can be shared on Facebook. A draft saved on this device is not publicly accessible."
+        : platform === "X"
+          ? "The X composer has a character limit; copy the full story first if you want to share a longer draft."
+          : `${platform} requires you to finish and publish your post in its app. Your draft stays on this device.`;
+      shareCaption.value = storyText();
+      const needsLink = platform === "Facebook";
+      document.querySelector("#share-link-label").hidden = !needsLink;
+      shareLink.hidden = !needsLink;
+      shareLink.value = "";
+      shareBackdrop.classList.add("open");
+      document.querySelector("#copy-share").focus();
+    }
+
+    document.addEventListener("selectionchange", rememberSelection);
+    window.addEventListener("pagehide", () => {
+      if (editorBackdrop.classList.contains("open")) {
+        clearTimeout(saveTimer);
+        saveDocument();
+      }
+    });
+    document.querySelector("#open-editor").addEventListener("click", openEditor);
+    document.querySelector("#close-editor").addEventListener("click", closeEditor);
+    document.querySelector("#print-document").addEventListener("click", printDocument);
+    document.querySelector("#download-document").addEventListener("click", downloadDocument);
+    document.querySelector("#cancel-share").addEventListener("click", closeShareDialog);
+    editorTitle.addEventListener("input", scheduleSave);
+    writingBody.addEventListener("input", scheduleSave);
+    writingBody.addEventListener("keyup", rememberSelection);
+    writingBody.addEventListener("mouseup", rememberSelection);
+    writingBody.addEventListener("paste", event => {
+      const html = event.clipboardData.getData("text/html");
+      if (!html) return;
+      event.preventDefault();
+      runEditorCommand("insertHTML", sanitizeContent(html));
+    });
+    document.querySelectorAll(".toolbar-button[data-command]").forEach(button => {
+      button.addEventListener("mousedown", event => event.preventDefault());
+      button.addEventListener("click", () => runEditorCommand(button.dataset.command));
+    });
+    document.querySelector("#block-format").addEventListener("change", event => runEditorCommand("formatBlock", `<${event.target.value}>`));
+    document.querySelector("#font-family").addEventListener("change", event => runEditorCommand("fontName", event.target.value));
+    document.querySelector("#font-size").addEventListener("change", event => runEditorCommand("fontSize", event.target.value));
+    document.querySelector("#text-color").addEventListener("input", event => runEditorCommand("foreColor", event.target.value));
+    document.querySelector("#highlight-color").addEventListener("input", event => runEditorCommand("hiliteColor", event.target.value));
+    document.querySelector("#insert-link").addEventListener("mousedown", event => event.preventDefault());
+    document.querySelector("#insert-link").addEventListener("click", event => openActionDialog("link", event.currentTarget));
+    document.querySelector("#insert-image").addEventListener("mousedown", event => event.preventDefault());
+    document.querySelector("#insert-image").addEventListener("click", event => openActionDialog("image", event.currentTarget));
+    document.querySelector("#insert-table").addEventListener("mousedown", event => event.preventDefault());
+    document.querySelector("#insert-table").addEventListener("click", event => openActionDialog("table", event.currentTarget));
+    document.querySelector("#cancel-action").addEventListener("click", closeActionDialog);
+    document.querySelector("#confirm-action").addEventListener("click", confirmActionDialog);
+    actionBackdrop.addEventListener("click", event => {
+      if (event.target === actionBackdrop) closeActionDialog();
+    });
+    document.querySelectorAll(".social-button").forEach(button => {
+      button.addEventListener("click", () => openShareDialog(button.dataset.platform));
+    });
+    document.querySelector("#copy-share").addEventListener("click", async () => {
+      const copied = await copyText(shareCaption.value);
+      notify(copied ? "Story copied to your clipboard." : "Couldn't copy automatically. Select and copy the story text.");
+    });
+    document.querySelector("#continue-share").addEventListener("click", async () => {
+      const caption = shareCaption.value.trim();
+      if (!caption) {
+        notify("Write a few lines before sharing your story.");
+        return;
+      }
+      if (activeSharePlatform === "Facebook") {
+        let publicUrl;
+        try {
+          publicUrl = new URL(shareLink.value);
+        } catch {
+          notify("Add a publicly accessible https:// link to your published story.");
+          shareLink.focus();
+          return;
+        }
+        if (publicUrl.protocol !== "https:" || ["localhost", "127.0.0.1"].includes(publicUrl.hostname)) {
+          notify("Facebook needs a publicly accessible https:// story link.");
+          shareLink.focus();
+          return;
+        }
+        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(publicUrl.href)}&quote=${encodeURIComponent(caption.slice(0, 8000))}`, "_blank", "noopener,noreferrer");
+        closeShareDialog();
+        return;
+      }
+      if (activeSharePlatform === "X") {
+        window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(caption.slice(0, 240))}`, "_blank", "noopener,noreferrer");
+        closeShareDialog();
+        return;
+      }
+      const destination = activeSharePlatform === "Instagram" ? "https://www.instagram.com/" : "https://www.tiktok.com/";
+      window.open(destination, "_blank", "noopener,noreferrer");
+      const copied = await copyText(caption);
+      closeShareDialog();
+      notify(copied
+        ? `Story copied. Paste it into your ${activeSharePlatform} post to publish.`
+        : `Copy your story, then paste it into your ${activeSharePlatform} post.`);
+    });
+    shareBackdrop.addEventListener("click", event => {
+      if (event.target === shareBackdrop) closeShareDialog();
+    });
+    editorBackdrop.addEventListener("click", event => {
+      if (event.target === editorBackdrop) closeEditor();
+    });
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape" && actionBackdrop.classList.contains("open")) {
+        closeActionDialog();
+        return;
+      }
+      if (event.key === "Escape" && shareBackdrop.classList.contains("open")) {
+        closeShareDialog();
+        return;
+      }
+      if (event.key === "Escape" && editorBackdrop.classList.contains("open")) {
+        closeEditor();
+        return;
+      }
+      if (event.key === "Tab" && shareBackdrop.classList.contains("open")) {
+        const fields = [...shareBackdrop.querySelectorAll("textarea, input:not([hidden]), button")].filter(element => !element.disabled);
+        const first = fields[0];
+        const last = fields[fields.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
+        return;
+      }
+      if (event.key === "Tab" && actionBackdrop.classList.contains("open")) {
+        const fields = [...actionBackdrop.querySelectorAll("input:not([hidden]), button")].filter(element => element.offsetParent !== null && !element.disabled);
+        const first = fields[0];
+        const last = fields[fields.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
+        return;
+      }
+      if (event.key === "Tab" && editorBackdrop.classList.contains("open")) {
+        const fields = [...editorBackdrop.querySelectorAll("input, select, button, [contenteditable='true']")].filter(element => element.offsetParent !== null && !element.disabled);
+        const first = fields[0];
+        const last = fields[fields.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
+        return;
+      }
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "s" && editorBackdrop.classList.contains("open")) {
+        event.preventDefault();
+        clearTimeout(saveTimer);
+        saveDocument();
+      }
+    });
+
+    document.querySelector("#shuffle-button").addEventListener("click", () => {
+      if (selectedGenre === "Political satire") {
+        fetchSatireStories();
+        return;
+      }
+      assignedStories = chooseStories(stories, 5);
+      document.querySelector("#intro-description").textContent = "Five stories from the day, randomly dealt. Find the thread between them and turn today's headlines into a world of your own.";
+      document.querySelector("#assignment-status").textContent = "Randomly assigned just for you";
+      document.querySelector("#feed-source-note").textContent = "A fresh mix from today's feed";
+      promptIndex = 0;
+      renderStories();
+      renderPrompt();
+      notify("A fresh five, just for you.");
+    });
+
+    document.querySelectorAll(".genre-button").forEach(button => {
+      button.addEventListener("click", () => {
+        selectedGenre = button.dataset.genre;
+        document.querySelectorAll(".genre-button").forEach(option => {
+          const active = option === button;
+          option.classList.toggle("active", active);
+          option.setAttribute("aria-pressed", String(active));
+        });
+        promptIndex = 0;
+        if (selectedGenre === "Political satire") {
+          fetchSatireStories();
+          return;
+        }
+        satireRequestId += 1;
+        satireLoading = false;
+        assignedStories = chooseStories(stories, 5);
+        document.querySelector("#intro-description").textContent = "Five stories from the day, randomly dealt. Find the thread between them and turn today's headlines into a world of your own.";
+        document.querySelector("#assignment-status").textContent = "Randomly assigned just for you";
+        document.querySelector("#feed-source-note").textContent = "A fresh mix from today's feed";
+        renderStories();
+        renderPrompt();
+      });
+    });
+
+    document.querySelector("#generate-button").addEventListener("click", () => {
+      promptIndex += 1;
+      renderPrompt();
+      notify("Your story prompt is ready.");
+    });
+
+    document.querySelector("#copy-button").addEventListener("click", async () => {
+      const text = promptText.innerText;
+      try {
+        await navigator.clipboard.writeText(text);
+        notify("Prompt copied to your clipboard.");
+      } catch {
+        const field = document.createElement("textarea");
+        field.value = text;
+        field.setAttribute("readonly", "");
+        field.style.position = "fixed";
+        field.style.opacity = "0";
+        document.body.append(field);
+        field.select();
+        const copied = document.execCommand("copy");
+        field.remove();
+        notify(copied ? "Prompt copied to your clipboard." : "Couldn't copy automatically. Select and copy the prompt text.");
+      }
+    });
+
+    accountButton.addEventListener("click", openAccountDialog);
+    document.querySelector("#close-account").addEventListener("click", closeAccountDialog);
+    accountBackdrop.addEventListener("click", event => {
+      if (event.target === accountBackdrop) closeAccountDialog();
+    });
+    document.querySelector("#toggle-auth-mode").addEventListener("click", event => {
+      authMode = authMode === "signin" ? "signup" : "signin";
+      document.querySelector("#auth-submit").textContent = authMode === "signin" ? "Sign in" : "Create account";
+      event.currentTarget.textContent = authMode === "signin" ? "Create an account" : "Already have an account? Sign in";
+      document.querySelector("#auth-password").autocomplete = authMode === "signin" ? "current-password" : "new-password";
+      authError.textContent = "";
+    });
+    authForm.addEventListener("submit", async event => {
+      event.preventDefault();
+      authError.textContent = "";
+      const setupError = firebaseSetupError();
+      if (setupError) {
+        authError.textContent = setupError;
+        return;
+      }
+      const submit = document.querySelector("#auth-submit");
+      submit.disabled = true;
+      submit.textContent = authMode === "signin" ? "Signing in…" : "Creating…";
+      try {
+        const email = document.querySelector("#auth-email").value.trim();
+        const password = document.querySelector("#auth-password").value;
+        if (authMode === "signup") await firebaseAuth.createUserWithEmailAndPassword(email, password);
+        else await firebaseAuth.signInWithEmailAndPassword(email, password);
+        authForm.reset();
+        closeAccountDialog();
+        notify(authMode === "signin" ? "Signed in. Your journal is syncing." : "Account created. Your journal is syncing.");
+      } catch (error) {
+        const messages = {
+          "auth/email-already-in-use": "An account already uses this email. Try signing in.",
+          "auth/invalid-email": "Enter a valid email address.",
+          "auth/invalid-credential": "Email or password is incorrect.",
+          "auth/user-not-found": "No account was found for this email.",
+          "auth/wrong-password": "Email or password is incorrect.",
+          "auth/weak-password": "Choose a password with at least 6 characters.",
+          "auth/too-many-requests": "Too many attempts. Wait a little and try again.",
+          "auth/network-request-failed": "Couldn't reach Firebase. Check your connection."
+        };
+        authError.textContent = messages[error.code] || `Authentication failed: ${error.message}`;
+      } finally {
+        submit.disabled = false;
+        submit.textContent = authMode === "signin" ? "Sign in" : "Create account";
+      }
+    });
+    document.querySelector("#sign-out").addEventListener("click", async () => {
+      try {
+        clearTimeout(saveTimer);
+        await saveDocument();
+        await firebaseAuth.signOut();
+        closeAccountDialog();
+        notify("You are signed out. Your local draft remains on this device.");
+      } catch (error) {
+        authError.textContent = `Couldn't sign out: ${error.message}`;
+      }
+    });
+    journalEntrySelect.addEventListener("change", async () => {
+      const nextId = journalEntrySelect.value;
+      if (!nextId || nextId === currentEntryId) return;
+      if (documentRevision !== savedRevision && !window.confirm("Switch entries and discard unsaved edits?")) {
+        journalEntrySelect.value = currentEntryId;
+        return;
+      }
+      clearTimeout(saveTimer);
+      if (documentRevision !== savedRevision && !pendingRemoteEntry) await saveDocument();
+      await loadJournalEntry(nextId);
+    });
+    newEntryButton.addEventListener("click", async () => {
+      clearTimeout(saveTimer);
+      if (documentRevision !== savedRevision && !pendingRemoteEntry) await saveDocument();
+      await createJournalEntry();
+    });
+    document.querySelector("#journal-sign-in").addEventListener("click", openAccountDialog);
+    useCloudCopyButton.addEventListener("click", () => {
+      if (pendingRemoteEntry) applyJournalEntry(pendingRemoteEntry);
+    });
+    keepLocalCopyButton.addEventListener("click", async () => {
+      if (!pendingRemoteEntry) return;
+      pendingRemoteEntry = null;
+      useCloudCopyButton.hidden = true;
+      keepLocalCopyButton.hidden = true;
+      savedRevision = documentRevision - 1;
+      await saveDocument();
+    });
+
+    if (firebaseConfigured() && window.firebase) {
+      try {
+        firebase.initializeApp(firebaseConfig);
+        firebaseAuth = firebase.auth();
+        firestore = firebase.firestore();
+        firebaseAuth.onAuthStateChanged(async user => {
+          if (currentUser?.uid !== user?.uid) {
+            currentEntryUnsubscribe?.();
+            entryListUnsubscribe?.();
+            currentEntryUnsubscribe = null;
+            entryListUnsubscribe = null;
+          }
+          currentUser = user;
+          setAccountUi(user);
+          if (user) {
+            await loadUserJournal(user);
+          } else {
+            currentEntries = [];
+            currentEntryId = null;
+            pendingRemoteEntry = null;
+            renderJournalEntries();
+            editorSaveStatus.textContent = "Saved on this device";
+            editorSaveStatus.style.color = "";
+          }
+        });
+      } catch (error) {
+        authError.textContent = `Firebase could not start: ${error.message}`;
+      }
+    }
+
+    document.querySelector("#issue-date").textContent = new Intl.DateTimeFormat("en-US", {
+      weekday: "long", month: "long", day: "numeric"
+    }).format(new Date());
+    assignedStories = chooseStories(stories, 5);
+    renderStories();
+    renderPrompt();
+  </script>
+</body>
+</html>
