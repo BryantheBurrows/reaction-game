@@ -231,7 +231,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .scale7 .opts { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
 .scale7 label { position: relative; }
 .scale7 input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
-.scale7 span {
+.scale7 .opts span {
   display: grid;
   place-items: center;
   height: 44px;
@@ -244,7 +244,9 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 }
 .scale7 input:checked + span { background: var(--signal); border-color: var(--signal); color: var(--on-accent); }
 .scale7 input:focus-visible + span { outline: 2px solid var(--signal); outline-offset: 2px; }
-.scale7 .ends { display: flex; justify-content: space-between; font-size: 0.78rem; color: var(--muted); }
+.scale7 .ends { display: flex; justify-content: space-between; gap: 12px; font-size: 0.8rem; color: var(--muted); }
+.scale7 .ends span { white-space: nowrap; }
+.scale7 .ends b { font-family: var(--font-mono); font-weight: 700; color: var(--text); margin-right: 4px; }
 
 .times { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; margin: 0; padding: 0; list-style: none; }
 .times li { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 4px; text-align: center; font-family: var(--font-mono); font-size: 0.95rem; font-weight: 700; font-variant-numeric: tabular-nums; }
@@ -298,7 +300,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
   color: var(--muted);
 }
 .pc-dist { color: var(--amber); white-space: nowrap; }
-.pc-name { display: flex; align-items: center; gap: 9px; margin-top: 5px; font-size: 1.4rem; font-weight: 700; letter-spacing: -0.01em; color: var(--text); }
+.pc-name { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 9px; margin-top: 5px; font-size: 1.4rem; font-weight: 700; letter-spacing: -0.01em; color: var(--text); }
 .pc-dot { width: 11px; height: 11px; border-radius: 50%; flex: none; background: var(--accent); box-shadow: 0 0 12px var(--accent); }
 .pc-tag { font-size: 0.8rem; font-weight: 600; color: var(--accent); }
 .pc-fact { margin: 6px 0 0; font-size: 0.88rem; line-height: 1.45; color: color-mix(in srgb, var(--text) 88%, transparent); text-wrap: pretty; }
@@ -661,9 +663,52 @@ footer { color: var(--muted); font-size: 0.8rem; display: flex; flex-wrap: wrap;
       css: 'radial-gradient(circle at 35% 30%, #A9BEFF, #3A63D8 55%, #142A73)',
       facts: ['Winds here top 2,000 km/h, the fastest in the solar system.',
               'One year on Neptune lasts about 165 Earth years.',
-              'It was found with maths before anyone spotted it through a telescope.'] }
+              'It was found with maths before anyone spotted it through a telescope.'] },
+    // Exoplanets: worlds orbiting other stars. Their looks are artist's impressions.
+    { name: 'Proxima Centauri b', exo: true, dist: '4.2 light-years away', tag: 'Our nearest neighbour', accent: 0xFF8A65, tilt: 10, atmo: 0xFFB199,
+      css: 'radial-gradient(circle at 35% 30%, #F2B49A, #9C4F3A 55%, #3E1B12)',
+      facts: ['The closest known exoplanet, circling the nearest star to the Sun.',
+              'A year there lasts only about 11 Earth days.',
+              'It sits in its star\u2019s habitable zone, where liquid water could exist.'] },
+    { name: 'TRAPPIST-1e', exo: true, dist: '40 light-years away', tag: 'One of seven siblings', accent: 0x2DD4BF, tilt: 5, atmo: 0x8FF0E0,
+      css: 'radial-gradient(circle at 35% 30%, #B5F5EA, #1F8F86 55%, #0B3B3A)',
+      facts: ['One of seven Earth-sized planets orbiting the same small red star.',
+              'A year there lasts about 6 Earth days.',
+              'One of the best bets for a rocky world that could hold water.'] },
+    { name: 'HD 189733 b', exo: true, dist: '64 light-years away', tag: 'Rains glass sideways', accent: 0x5B8CFF, tilt: 0, atmo: 0x7FA8FF,
+      css: 'radial-gradient(circle at 35% 30%, #A9C2FF, #2450C8 55%, #0D1F5C)',
+      facts: ['It looks a deep blue like Earth, but it is a scorching gas giant.',
+              'It may rain glass there, blown sideways by winds of thousands of km/h.',
+              'One of the first exoplanets to have its colour measured.'] },
+    { name: 'Kepler-16b', exo: true, dist: '245 light-years away', tag: 'The planet with two suns', accent: 0xD6C3A3, tilt: 0, atmo: null,
+      css: 'repeating-linear-gradient(180deg, #E4D6BE 0 12px, #B9A586 12px 22px)',
+      facts: ['It orbits two stars at once, so it gets double sunsets.',
+              'Astronomers nicknamed it \u201cTatooine\u201d after the desert world with two suns.',
+              'A cold gas giant about the size of Saturn.'] },
+    { name: '51 Pegasi b', exo: true, dist: '50 light-years away', tag: 'The trailblazer', accent: 0xFF7A2E, tilt: 0, atmo: 0xFFA25E, glow: true,
+      css: 'repeating-linear-gradient(180deg, #FDBA74 0 10px, #EA580C 10px 20px, #9A3412 20px 28px)',
+      facts: ['The first planet found orbiting a Sun-like star, back in 1995.',
+              'Its discovery won the 2019 Nobel Prize in Physics.',
+              'A \u201chot Jupiter\u201d that whips around its star in just over 4 days.'] }
   ];
-  let planetCount = 0; // how many planets have been revealed this page load
+  const SOLAR_COUNT = PLANETS.filter((p) => !p.exo).length;
+
+  // Random order with no repeats until every planet has appeared once.
+  let planetBag = [];
+  let lastPlanet = -1;
+  function nextPlanet() {
+    if (!planetBag.length) {
+      planetBag = PLANETS.map((_, i) => i);
+      for (let i = planetBag.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [planetBag[i], planetBag[j]] = [planetBag[j], planetBag[i]];
+      }
+      const n = planetBag.length - 1; // never show the same planet twice in a row across refills
+      if (planetBag[n] === lastPlanet) [planetBag[0], planetBag[n]] = [planetBag[n], planetBag[0]];
+    }
+    lastPlanet = planetBag.pop();
+    return lastPlanet;
+  }
 
   const CUES = ['colour', 'shape', 'sound'];
   const DELAYS = ['fixed', 'random'];
@@ -1043,6 +1088,31 @@ footer { color: var(--muted); font-size: 0.8rem; display: flex; flex-wrap: wrap;
           bands(['#8FDCE0', '#9EE3E6', '#A9E9EB'], 0.04, 0.3);
           streaks('#E2FCFD', 30, 0.12);
           break;
+        case 'Proxima Centauri b':
+          g.fillStyle = '#9C4F3A'; g.fillRect(0, 0, W, H);
+          streaks('#C47A5C', 50, 0.3);
+          blobs('rgba(60,25,15,0.55)', 40, 260, 128, 160, 16);
+          blobs('rgba(230,200,185,0.35)', 10, 120, 90, 50, 10);
+          caps('rgba(240,230,225,0.8)', 8);
+          break;
+        case 'TRAPPIST-1e':
+          g.fillStyle = '#1F7F7A'; g.fillRect(0, 0, W, H);
+          [[110, 120, 40, 12], [330, 100, 55, 12]].forEach(([x, y, sp, sz]) => blobs('#3E6B4A', 22, x, y, sp, sz));
+          caps('#E6F7F5', 26);
+          g.globalAlpha = 0.4; streaks('#FFFFFF', 50, 1); g.globalAlpha = 1;
+          break;
+        case 'HD 189733 b':
+          bands(['#173E9E', '#2450C8', '#3567E0', '#1E47B4'], 0.05, 0.7);
+          streaks('#A9C2FF', 120, 0.25); streaks('#0D1F5C', 40, 0.25);
+          break;
+        case 'Kepler-16b':
+          bands(['#B9A586', '#CDBB9C', '#E4D6BE', '#A8957A'], 0.06, 0.5);
+          streaks('#F4EBDC', 40, 0.15);
+          break;
+        case '51 Pegasi b':
+          bands(['#7C2D12', '#C2410C', '#EA580C', '#FB923C', '#FDBA74'], 0.08, 0.6);
+          streaks('#FFE4C4', 60, 0.25);
+          break;
         case 'Neptune':
           bands(['#2E55C8', '#3A63D8', '#4A74E6', '#3459CC'], 0.06, 0.5);
           streaks('#9DB6FF', 60, 0.2);
@@ -1071,9 +1141,10 @@ footer { color: var(--muted); font-size: 0.8rem; display: flex; flex-wrap: wrap;
       tiltGroup.rotation.set(0.32, 0, -THREE.MathUtils.degToRad(pl.tilt));
       const spin = new THREE.Group();
       tiltGroup.add(spin);
-      spin.add(new THREE.Mesh(planetGeo, track(new THREE.MeshStandardMaterial({
-        map: planetTexture(pl.name), color: 0xd4d4d4, roughness: 0.9, metalness: 0, envMapIntensity: 0.25
-      }))));
+      const map = planetTexture(pl.name);
+      spin.add(new THREE.Mesh(planetGeo, track(new THREE.MeshStandardMaterial(Object.assign({
+        map, color: 0xd4d4d4, roughness: 0.9, metalness: 0, envMapIntensity: 0.25
+      }, pl.glow ? { emissiveMap: map, emissive: 0xff8844, emissiveIntensity: 0.55 } : {})))));
       if (pl.atmo) {
         tiltGroup.add(new THREE.Mesh(atmoGeo, track(new THREE.MeshBasicMaterial({
           color: pl.atmo, transparent: true, opacity: 0.16, side: THREE.BackSide, blending: THREE.AdditiveBlending, depthWrite: false
@@ -1398,8 +1469,8 @@ footer { color: var(--muted); font-size: 0.8rem; display: flex; flex-wrap: wrap;
   function showPlanetCard(i) {
     const pl = PLANETS[i];
     el.planetCard.style.setProperty('--accent', '#' + pl.accent.toString(16).padStart(6, '0'));
-    el.pcKicker.textContent = `✦ Planet ${i + 1} of ${PLANETS.length}`;
-    el.pcDist.textContent = `${pl.au} AU from the Sun`;
+    el.pcKicker.textContent = pl.exo ? '✦ Exoplanet' : `✦ Planet ${i + 1} of ${SOLAR_COUNT} from the Sun`;
+    el.pcDist.textContent = pl.exo ? pl.dist : `${pl.au} AU from the Sun`;
     el.pcName.textContent = pl.name;
     el.pcTag.textContent = pl.tag;
     el.pcFact.textContent = pl.facts[Math.floor(Math.random() * pl.facts.length)];
@@ -1441,7 +1512,7 @@ footer { color: var(--muted); font-size: 0.8rem; display: flex; flex-wrap: wrap;
         const planetIdx = info.planet || 0;
         setVisual('result', { planet: planetIdx });
         const pl = showPlanetCard(planetIdx);
-        const planetSay = ` You reached ${pl.name}. ${el.pcFact.textContent}`;
+        const planetSay = ` You reached ${pl.exo ? 'the exoplanet ' : ''}${pl.name}. ${el.pcFact.textContent}`;
         setPill('✓', 'Recorded');
         if (run.feedback_type === 'immediate') {
           el.label.textContent = `Attempt ${run.valid_count} of ${CONFIG.attemptsPerRun}`;
@@ -1579,7 +1650,7 @@ footer { color: var(--muted); font-size: 0.8rem; display: flex; flex-wrap: wrap;
     });
     run.valid_count++;
     audio.chime();
-    const planet = planetCount++ % PLANETS.length;
+    const planet = nextPlanet();
     if (run.valid_count >= CONFIG.attemptsPerRun) {
       game.finishing = true;
       setState(S.RESULT, { rt, planet });
@@ -1683,7 +1754,7 @@ footer { color: var(--muted); font-size: 0.8rem; display: flex; flex-wrap: wrap;
           <div class="opts">
             ${[1, 2, 3, 4, 5, 6, 7].map((n) => `<label><input type="radio" name="fair" value="${n}" id="fair-${n}" aria-label="${n}${n === 1 ? ', very unfair' : n === 7 ? ', very fair' : ''}"><span>${n}</span></label>`).join('')}
           </div>
-          <div class="ends"><span>1 · Very unfair</span><span>7 · Very fair</span></div>
+          <div class="ends" aria-hidden="true"><span><b>1</b>Very unfair</span><span><b>7</b>Very fair</span></div>
         </fieldset>
         <div class="actions"><button class="btn btn-primary" type="submit" id="rating-submit" disabled>Continue</button></div>
       </form>`, 'input[name="fair"]');
