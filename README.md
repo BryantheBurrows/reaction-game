@@ -6,6 +6,8 @@ Wait for the cue, react as fast as you can, and discover a planet with every goo
 
 Built by Bryan Burrows as a UX research portfolio piece.
 
+### ▶ [Play it live](https://bryantheburrows.github.io/reaction-game/)
+
 ---
 
 ## Contents
@@ -26,14 +28,16 @@ Built by Bryan Burrows as a UX research portfolio piece.
 
 ## Play it
 
-Reflex Lab is a single HTML file with no build step.
+**Online:** play it at **https://bryantheburrows.github.io/reaction-game/**. It's hosted on GitHub Pages and updates automatically whenever `main` changes.
+
+**On your own computer:** Reflex Lab is a single HTML file with no build step.
 
 1. Download or clone this repository.
 2. Open `index.html` in a modern browser (Chrome, Edge, Firefox or Safari).
 
 An internet connection is needed so the page can load Three.js and the fonts from their CDNs.
 
-To host it online for free, turn on **GitHub Pages**: open the repository's **Settings › Pages**, choose **Deploy from a branch**, select `main` and `/ (root)`, then save. GitHub gives you a public link a minute or two later.
+To host your own copy, fork the repository and turn on **GitHub Pages**: open **Settings › Pages**, choose **Deploy from a branch**, select `main` and `/ (root)`, then save. Your link will be `https://<your-username>.github.io/reaction-game/`.
 
 ---
 
