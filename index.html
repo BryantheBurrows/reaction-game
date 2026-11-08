@@ -270,6 +270,38 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .fallback[data-shape="error"] { background: var(--amber); clip-path: polygon(50% 4%, 100% 96%, 0 96%); }
 .fallback.shake { animation: shake 0.4s ease; }
 
+/* Instructions sit inside the game space: lighter backdrop so the shape stays visible behind them */
+.sheet[data-kind="brief"] { background: linear-gradient(to bottom, rgba(17, 19, 23, 0.25), rgba(17, 19, 23, 0.7)); backdrop-filter: none; -webkit-backdrop-filter: none; cursor: pointer; place-items: end center; padding-bottom: 22px; }
+.sheet[data-kind="brief"] .sheet-card { background: color-mix(in srgb, var(--surface) 82%, transparent); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); cursor: pointer; }
+.start-prompt { display: flex; align-items: center; gap: 10px; font-weight: 600; color: var(--text); }
+.start-prompt kbd { font-size: 0.8rem; }
+.start-prompt .pulse { width: 9px; height: 9px; border-radius: 50%; background: var(--signal); box-shadow: 0 0 0 0 color-mix(in srgb, var(--signal) 60%, transparent); animation: pulse 1.6s ease-out infinite; flex: none; }
+@keyframes pulse { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--signal) 60%, transparent); } 100% { box-shadow: 0 0 0 12px transparent; } }
+
+/* Score band chip and legend */
+.rt-band {
+  --b: var(--text);
+  display: inline-flex; align-items: center; gap: 7px;
+  margin: 4px auto 2px; padding: 4px 12px 4px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--b) 16%, var(--bg));
+  border: 1px solid color-mix(in srgb, var(--b) 50%, var(--line));
+  color: var(--text); font-size: 0.85rem; font-weight: 600;
+}
+.rt-band .emo { font-size: 1.05rem; line-height: 1; }
+.rt-band[data-band="amazing"], .bands li[data-band="amazing"] { --b: #2DD4BF; }
+.rt-band[data-band="good"], .bands li[data-band="good"] { --b: #3D7BFF; }
+.rt-band[data-band="average"], .bands li[data-band="average"] { --b: #A78BFA; }
+.rt-band[data-band="below"], .bands li[data-band="below"] { --b: #F5A524; }
+.bands { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.bands li { --b: var(--line); display: grid; grid-template-columns: 22px 1fr auto; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 9px; background: var(--bg); border: 1px solid var(--line); box-shadow: inset 3px 0 0 var(--b); font-size: 0.85rem; }
+.bands li .emo { font-size: 1rem; text-align: center; }
+.bands li .name { font-weight: 600; color: var(--text); }
+.bands li .rng { font-family: var(--font-mono); font-size: 0.75rem; color: var(--muted); white-space: nowrap; }
+.bands li.you { border-color: color-mix(in srgb, var(--b) 60%, var(--line)); background: color-mix(in srgb, var(--b) 10%, var(--bg)); }
+.bands li.you .name::after { content: " · you"; color: var(--muted); font-weight: 500; }
+.bands-title { margin: 14px 0 8px; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+
 /* Planet fact card, shown over the planet after a valid response */
 .planet-card {
   --accent: var(--signal);
@@ -476,9 +508,10 @@ footer { color: var(--muted); font-size: 0.8rem; display: flex; flex-wrap: wrap;
         <div class="hud-bottom">
           <div class="label" id="label">Ready</div>
           <div class="readout" id="readout">—</div>
+          <div class="rt-band" id="rt-band" hidden></div>
           <div class="hint" id="hint">Press Space or tap here to start.</div>
         </div>
-        <div class="sheet" id="sheet"><div class="sheet-card" id="sheet-card"></div></div>
+        <div class="sheet" id="sheet" data-kind=""><div class="sheet-card" id="sheet-card"></div></div>
       </div>
 
       <div class="controls">
@@ -507,6 +540,8 @@ footer { color: var(--muted); font-size: 0.8rem; display: flex; flex-wrap: wrap;
         </div>
         <div class="scale-ticks" aria-hidden="true"><span>150</span><span>250</span><span>350</span><span>450 ms</span></div>
         <p class="caption">The shaded band is the typical adult simple reaction time, about 200–250 ms. The marker is your median.</p>
+        <p class="bands-title">What your time means</p>
+        <ul class="bands" id="bands"></ul>
       </div>
 
       <div class="card">
@@ -710,6 +745,17 @@ footer { color: var(--muted); font-size: 0.8rem; display: flex; flex-wrap: wrap;
     return lastPlanet;
   }
 
+  // Score bands for a single reaction time (or a median), with a matching emoji.
+  const RT_BANDS = [
+    { key: 'amazing', label: 'Amazing', emoji: '🤩', max: 200, range: 'under 200 ms' },
+    { key: 'good', label: 'Very good', emoji: '😄', max: 250, range: '200–249 ms' },
+    { key: 'average', label: 'Average', emoji: '🙂', max: 300, range: '250–299 ms' },
+    { key: 'below', label: 'Below average', emoji: '🐢', max: Infinity, range: '300 ms or more' }
+  ];
+  const rtBand = (ms) => RT_BANDS.find((b) => ms < b.max);
+  const bandChipHTML = (b) => `<span class="emo" aria-hidden="true">${b.emoji}</span>${b.label}`;
+  const seenCues = new Set(); // cue types this page has already explained
+
   const CUES = ['colour', 'shape', 'sound'];
   const DELAYS = ['fixed', 'random'];
   const FEEDBACKS = ['immediate', 'end'];
@@ -741,7 +787,7 @@ footer { color: var(--muted); font-size: 0.8rem; display: flex; flex-wrap: wrap;
     stage: $('stage'), canvas: $('scene'), fallback: $('fallback'),
     sheet: $('sheet'), sheetCard: $('sheet-card'),
     pillIcon: $('pill-icon'), pillText: $('pill-text'), attemptText: $('attempt-text'), dots: $('dots'),
-    label: $('label'), readout: $('readout'), hint: $('hint'),
+    label: $('label'), readout: $('readout'), hint: $('hint'), rtBand: $('rt-band'), bands: $('bands'),
     planetCard: $('planet-card'), pcKicker: $('pc-kicker'), pcDist: $('pc-dist'), pcName: $('pc-name'), pcTag: $('pc-tag'), pcFact: $('pc-fact'),
     start: $('btn-start'), stop: $('btn-stop'), notice: $('notice'), status: $('status'),
     chipRecord: $('chip-record'), chipMode: $('chip-mode'),
@@ -1469,7 +1515,7 @@ footer { color: var(--muted); font-size: 0.8rem; display: flex; flex-wrap: wrap;
   function showPlanetCard(i) {
     const pl = PLANETS[i];
     el.planetCard.style.setProperty('--accent', '#' + pl.accent.toString(16).padStart(6, '0'));
-    el.pcKicker.textContent = pl.exo ? '✦ Exoplanet' : `✦ Planet ${i + 1} of ${SOLAR_COUNT} from the Sun`;
+    el.pcKicker.textContent = pl.exo ? '✦ Exoplanet' : `✦ Planet ${i + 1} of ${SOLAR_COUNT}`;
     el.pcDist.textContent = pl.exo ? pl.dist : `${pl.au} AU from the Sun`;
     el.pcName.textContent = pl.name;
     el.pcTag.textContent = pl.tag;
@@ -1482,6 +1528,7 @@ footer { color: var(--muted); font-size: 0.8rem; display: flex; flex-wrap: wrap;
     game.state = next;
     el.stage.dataset.state = next;
     if (next !== S.RESULT) el.planetCard.hidden = true;
+    el.rtBand.hidden = true;
     el.sheet.hidden = !SHEET_STATES.has(next);
     const cue = run ? run.cue_type : null;
     const phrase = cue ? CUE_PHRASE[cue] : '';
@@ -1518,7 +1565,11 @@ footer { color: var(--muted); font-size: 0.8rem; display: flex; flex-wrap: wrap;
           el.label.textContent = `Attempt ${run.valid_count} of ${CONFIG.attemptsPerRun}`;
           el.readout.className = 'readout';
           el.readout.innerHTML = msHTML(info.rt);
-          announce(`${round(info.rt)} milliseconds.${planetSay}`);
+          const band = rtBand(info.rt);
+          el.rtBand.dataset.band = band.key;
+          el.rtBand.innerHTML = bandChipHTML(band);
+          el.rtBand.hidden = false;
+          announce(`${round(info.rt)} milliseconds, ${band.label.toLowerCase()}.${planetSay}`);
         } else {
           el.label.textContent = `Attempt ${run.valid_count} of ${CONFIG.attemptsPerRun}`;
           el.readout.className = 'readout word';
@@ -1702,6 +1753,7 @@ footer { color: var(--muted); font-size: 0.8rem; display: flex; flex-wrap: wrap;
   function openSheet(state, html, focusSel) {
     clearTimers();
     el.sheetCard.innerHTML = html;
+    el.sheet.dataset.kind = state;
     setState(state);
     const target = focusSel ? el.sheetCard.querySelector(focusSel) : el.sheetCard.querySelector('button');
     if (target) setTimeout(() => target.focus({ preventScroll: true }), 30);
@@ -1723,6 +1775,14 @@ footer { color: var(--muted); font-size: 0.8rem; display: flex; flex-wrap: wrap;
   function showBrief() {
     newRun();
     const cue = run.cue_type;
+    // Instructions appear only the first time this page uses a cue type.
+    // After that, the next round goes straight to the game.
+    if (seenCues.has(cue)) {
+      setState(S.READY);
+      el.stage.focus({ preventScroll: true });
+      return;
+    }
+    seenCues.add(cue);
     const moderated = session.mode === 'moderated';
     const demo = cue === 'colour'
       ? `<span class="swatch"><span class="shape circle"></span>Wait</span><span class="arrow">→</span><span class="swatch"><span class="shape circle blue"></span>React</span>`
@@ -1736,7 +1796,8 @@ footer { color: var(--muted); font-size: 0.8rem; display: flex; flex-wrap: wrap;
       <span class="eyebrow">${moderated ? `Round ${run.run_number} of ${session.cue_order.length} · ${CUE_NAME[cue]} cue` : `Round ${run.run_number}`}</span>
       <h2>React when ${CUE_PHRASE[cue]}</h2>
       <div class="cue-demo" aria-hidden="true">${demo}</div>
-      <p>Each round has <strong>${CONFIG.attemptsPerRun} attempts</strong>. Respond with Space, Enter, a click or a tap anywhere on the stage. If you respond too early, that attempt is repeated. ${feedbackLine}</p>
+      <p>Each round has <strong>${CONFIG.attemptsPerRun} attempts</strong>. Respond with Space, Enter, a click or a tap anywhere in the game. If you respond too early, that attempt is repeated. ${feedbackLine}</p>
+      <p class="start-prompt"><span class="pulse" aria-hidden="true"></span>Click anywhere or press <kbd>Space</kbd> to start</p>
       ${cue === 'sound' ? `<p><strong>Turn your sound on.</strong> Use the test tone to set a comfortable volume. Nothing visual changes when the tone plays.</p>` : ''}
       <div class="actions">
         <button class="btn btn-primary" type="button" data-act="begin">Start round</button>
@@ -1790,6 +1851,7 @@ footer { color: var(--muted); font-size: 0.8rem; display: flex; flex-wrap: wrap;
     openSheet(S.SUMMARY, `
       <span class="eyebrow">Round ${run.run_number} results</span>
       <h2>Median ${fmtMs(run.median_rt_ms)}</h2>
+      ${run.median_rt_ms != null ? `<span class="rt-band" data-band="${rtBand(run.median_rt_ms).key}" style="margin:0">${bandChipHTML(rtBand(run.median_rt_ms))}</span>` : ''}
       <ul class="times" aria-label="Your five times">
         ${hits.map((t, i) => `<li class="${t.reaction_time_ms === best ? 'best' : ''}"><small>#${i + 1}</small>${round(t.reaction_time_ms)}</li>`).join('')}
       </ul>
@@ -1810,6 +1872,15 @@ footer { color: var(--muted); font-size: 0.8rem; display: flex; flex-wrap: wrap;
       <h2>Thank you</h2>
       <p>${moderated ? 'Please hand the device back to the facilitator.' : session.recording ? 'Your anonymous results help answer how cue type and feedback timing affect reaction speed and perceived fairness.' : 'Thanks for playing.'}</p>
       <div class="actions"><button class="btn" type="button" data-act="restart">Start a new session</button></div>`);
+  }
+
+  // Leave the instructions and start the first attempt straight away.
+  function beginRound() {
+    if (game.state !== S.BRIEF) return;
+    audio.unlock(); // unlock audio on this gesture (sound cue and hit chime)
+    setState(S.READY);
+    el.stage.focus({ preventScroll: true });
+    startAttempt();
   }
 
   el.sheetCard.addEventListener('click', (e) => {
@@ -1834,9 +1905,7 @@ footer { color: var(--muted); font-size: 0.8rem; display: flex; flex-wrap: wrap;
         if (!audio.test()) showNotice('This browser could not play sound.');
         break;
       case 'begin':
-        audio.unlock(); // unlock audio on this gesture (sound cue and hit chime)
-        setState(S.READY);
-        el.stage.focus({ preventScroll: true });
+        beginRound();
         break;
       case 'again':
         run.played_again = true;
@@ -1861,8 +1930,12 @@ footer { color: var(--muted); font-size: 0.8rem; display: flex; flex-wrap: wrap;
   /* =========================================================
      Stats panel
      ========================================================= */
+  function renderBands(youBand) {
+    el.bands.innerHTML = RT_BANDS.map((b) => `<li data-band="${b.key}" class="${b.key === youBand ? 'you' : ''}"><span class="emo" aria-hidden="true">${b.emoji}</span><span class="name">${b.label}</span><span class="rng">${b.range}</span></li>`).join('');
+  }
+
   function renderStats() {
-    if (!session) return;
+    if (!session) { renderBands(null); return; }
     const allTrials = session.runs.flatMap((r) => r.trials.map((t) => ({ ...t, feedback_type: r.feedback_type, run_number: r.run_number })));
     const hits = allTrials.filter((t) => t.outcome === 'hit').map((t) => t.reaction_time_ms);
     const falses = allTrials.filter((t) => t.outcome === 'false_start').length;
@@ -1871,6 +1944,8 @@ footer { color: var(--muted); font-size: 0.8rem; display: flex; flex-wrap: wrap;
       && !(game.state === S.BRIEF);
     const visibleHits = midRun ? session.runs.filter((r) => r !== run).flatMap((r) => r.trials.filter((t) => t.outcome === 'hit').map((t) => t.reaction_time_ms)) : hits;
 
+    const youBand = visibleHits.length ? rtBand(median(visibleHits)).key : null;
+    renderBands(youBand);
     el.falses.textContent = String(falses);
     el.runs.textContent = String(session.runs.filter((r) => r.fairness_rating != null).length);
     el.countLabel.textContent = `${hits.length} valid attempt${hits.length === 1 ? '' : 's'}`;
@@ -2262,6 +2337,14 @@ footer { color: var(--muted); font-size: 0.8rem; display: flex; flex-wrap: wrap;
      Input
      ========================================================= */
   el.stage.addEventListener('pointerdown', (e) => {
+    if (game.state === S.BRIEF) {
+      // Anywhere in the game space starts the round, except the buttons themselves.
+      if (e.target.closest('button, a, input, label')) return;
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      e.preventDefault();
+      beginRound();
+      return;
+    }
     if (e.target.closest('.sheet')) return;
     if (e.pointerType === 'mouse' && e.button !== 0) return;
     e.preventDefault(); // stops follow-up mouse events from counting twice
@@ -2277,6 +2360,13 @@ footer { color: var(--muted); font-size: 0.8rem; display: flex; flex-wrap: wrap;
     }
     if (e.key !== ' ' && e.key !== 'Enter') return;
     const target = e.target;
+    if (game.state === S.BRIEF) {
+      // Space or Enter starts the round, unless a button has focus (it then acts as itself).
+      if (target instanceof HTMLElement && target.closest('button, a, input, select, textarea')) return;
+      e.preventDefault();
+      if (!e.repeat) beginRound();
+      return;
+    }
     if (target instanceof HTMLElement && target !== el.stage &&
         target.closest('button, a, input, select, textarea, label, .sheet')) return; // let controls act normally
     if (SHEET_STATES.has(game.state)) return;
