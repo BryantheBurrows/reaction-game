@@ -221,9 +221,9 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .cue-demo .swatch { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 0.85rem; }
 .cue-demo .arrow { color: var(--muted); }
 .shape { width: 26px; height: 26px; display: inline-block; flex: none; }
-.shape.circle { border-radius: 50%; background: var(--muted); }
-.shape.circle.blue { background: var(--signal); }
-.shape.square { border-radius: 4px; background: var(--muted); }
+.shape.circle { border-radius: 50%; background: radial-gradient(circle at 35% 30%, #FFD3CB, #E8665F 55%, #9C4A42); }
+.shape.circle.blue { background: radial-gradient(circle at 35% 30%, #BFD3FF, #3D7BFF 55%, #1C3F94); }
+.shape.square { border-radius: 4px; background: linear-gradient(135deg, #FFD3CB, #E8665F 55%, #9C4A42); }
 .speaker { font-size: 1.3rem; }
 
 .scale7 { display: grid; gap: 8px; border: 0; margin: 0; padding: 0; min-width: 0; }
@@ -261,12 +261,51 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 
 /* 2D fallback shapes (only when WebGL is unavailable) */
 .fallback { position: absolute; left: 50%; top: 40%; width: 132px; height: 132px; transform: translate(-50%, -50%); pointer-events: none; }
-.fallback[data-shape="idle"] { border-radius: 50%; background: var(--muted); }
-.fallback[data-shape="cueColour"] { border-radius: 50%; background: var(--signal); }
-.fallback[data-shape="cueShape"] { border-radius: 10px; background: var(--muted); }
-.fallback[data-shape="result"] { background: var(--text); transform: translate(-50%, -50%) rotate(45deg) scale(0.74); border-radius: 10px; }
+.fallback[data-shape="idle"] { border-radius: 50%; background: radial-gradient(circle at 35% 30%, #FFD3CB, #E8665F 55%, #9C4A42); }
+.fallback[data-shape="cueColour"] { border-radius: 50%; background: radial-gradient(circle at 35% 30%, #BFD3FF, #3D7BFF 55%, #1C3F94); }
+.fallback[data-shape="cueShape"] { border-radius: 10px; background: linear-gradient(135deg, #FFD3CB, #E8665F 55%, #9C4A42); }
+.fallback[data-shape="result"] { border-radius: 50%; background: #9A9187; }
 .fallback[data-shape="error"] { background: var(--amber); clip-path: polygon(50% 4%, 100% 96%, 0 96%); }
 .fallback.shake { animation: shake 0.4s ease; }
+
+/* Planet fact card, shown over the planet after a valid response */
+.planet-card {
+  --accent: var(--signal);
+  position: absolute;
+  top: 58px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(340px, calc(100% - 28px));
+  padding: 13px 16px 14px 18px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--surface) 80%, transparent);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--line));
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.38), inset 3px 0 0 var(--accent);
+  pointer-events: none;
+  animation: pc-in 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.25) 0.12s both;
+}
+.pc-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.pc-dist { color: var(--amber); white-space: nowrap; }
+.pc-name { display: flex; align-items: center; gap: 9px; margin-top: 5px; font-size: 1.4rem; font-weight: 700; letter-spacing: -0.01em; color: var(--text); }
+.pc-dot { width: 11px; height: 11px; border-radius: 50%; flex: none; background: var(--accent); box-shadow: 0 0 12px var(--accent); }
+.pc-tag { font-size: 0.8rem; font-weight: 600; color: var(--accent); }
+.pc-fact { margin: 6px 0 0; font-size: 0.88rem; line-height: 1.45; color: color-mix(in srgb, var(--text) 88%, transparent); text-wrap: pretty; }
+@keyframes pc-in {
+  from { opacity: 0; transform: translate(-50%, 10px) scale(0.94); }
+  to { opacity: 1; transform: translate(-50%, 0) scale(1); }
+}
 @keyframes shake {
   0%, 100% { margin-left: 0; }
   20% { margin-left: -12px; }
@@ -427,6 +466,11 @@ footer { color: var(--muted); font-size: 0.8rem; display: flex; flex-wrap: wrap;
           <span class="pill"><span class="icon" id="pill-icon" aria-hidden="true">○</span><span id="pill-text">Ready</span></span>
           <span class="pill subtle"><span id="attempt-text">Attempt 1 of 5</span><span class="dots" id="dots" aria-hidden="true"></span></span>
         </div>
+        <div class="planet-card" id="planet-card" aria-hidden="true" hidden>
+          <div class="pc-top"><span id="pc-kicker">✦ Planet 1 of 8</span><span class="pc-dist" id="pc-dist">0.39 AU from the Sun</span></div>
+          <div class="pc-name"><span class="pc-dot" aria-hidden="true"></span><span id="pc-name">Mercury</span><span class="pc-tag" id="pc-tag"></span></div>
+          <p class="pc-fact" id="pc-fact"></p>
+        </div>
         <div class="hud-bottom">
           <div class="label" id="label">Ready</div>
           <div class="readout" id="readout">—</div>
@@ -558,7 +602,7 @@ footer { color: var(--muted); font-size: 0.8rem; display: flex; flex-wrap: wrap;
      Configuration
      ========================================================= */
   const CONFIG = Object.freeze({
-    appVersion: '2.0.0',
+    appVersion: '2.1.0',
     attemptsPerRun: 5,
     fixedDelayMs: 2000,
     randomDelayMinMs: 1500,
@@ -572,8 +616,54 @@ footer { color: var(--muted); font-size: 0.8rem; display: flex; flex-wrap: wrap;
 
   const COLORS = Object.freeze({
     bg: 0x111317, slate: 0x8A93A3, signal: 0x3D7BFF, amber: 0xF5A524,
-    mist: 0xE9ECF1, line: 0x2E333D
+    mist: 0xE9ECF1, line: 0x2E333D,
+    rose: 0xE8665F, teal: 0x2DD4BF, violet: 0xA78BFA, pink: 0xF472B6, glow: 0x6D28D9
   });
+
+  // Planets revealed after each valid response, in order from the Sun. Distances in AU (Earth–Sun = 1).
+  const PLANETS = [
+    { name: 'Mercury', au: '0.39', tag: 'The speedy one', accent: 0xB9B0A7, tilt: 0.03, atmo: null,
+      css: 'radial-gradient(circle at 35% 30%, #E2DBD3, #9A9187 55%, #4F4943)',
+      facts: ['A year here lasts just 88 Earth days, the shortest of any planet.',
+              'With almost no air to hold heat, days reach about 430 °C and nights drop to −180 °C.',
+              'It is only a little bigger than our Moon.'] },
+    { name: 'Venus', au: '0.72', tag: 'The hothouse', accent: 0xF0CF8A, tilt: 177.4, atmo: 0xF5D9A0,
+      css: 'radial-gradient(circle at 35% 30%, #FFF1CC, #E8C987 55%, #8F6A2E)',
+      facts: ['The hottest planet: about 465 °C at the surface, hot enough to melt lead.',
+              'A day on Venus (243 Earth days) is longer than its year (225).',
+              'It spins backwards, so the Sun rises in the west.'] },
+    { name: 'Earth', au: '1.00', tag: 'Home sweet home', accent: 0x4FA3FF, tilt: 23.4, atmo: 0x7FB8FF,
+      css: 'radial-gradient(circle at 35% 30%, #A9D4FF, #2F6FD6 55%, #123A7A)',
+      facts: ['The only place we know of with life, including you.',
+              'About 71% of its surface is covered in water.',
+              'It is the densest planet in the solar system.'] },
+    { name: 'Mars', au: '1.52', tag: 'The red planet', accent: 0xE0643A, tilt: 25.2, atmo: 0xF2A07A,
+      css: 'radial-gradient(circle at 35% 30%, #F7A982, #C1502E 55%, #5E2412)',
+      facts: ['Olympus Mons is about 22 km tall, roughly two and a half Everests.',
+              'Its red colour comes from rusty iron in the dust.',
+              'Sunsets on Mars glow blue.'] },
+    { name: 'Jupiter', au: '5.20', tag: 'The giant', accent: 0xE3B07E, tilt: 3.1, atmo: null,
+      css: 'repeating-linear-gradient(180deg, #EEDCC0 0 12px, #C98F55 12px 22px, #D9B38C 22px 34px)',
+      facts: ['The Great Red Spot is a storm wider than Earth.',
+              'It is more than twice as massive as all the other planets combined.',
+              'A day here lasts under 10 hours, the shortest of any planet.'] },
+    { name: 'Saturn', au: '9.54', tag: 'Lord of the rings', accent: 0xF5D48F, tilt: 26.7, atmo: null, rings: true,
+      css: 'repeating-linear-gradient(180deg, #F3E1B0 0 14px, #D6B66E 14px 24px)',
+      facts: ['It is less dense than water, so it would float in a big enough bath.',
+              'Its rings are mostly ice, from dust-sized grains to chunks as big as houses.',
+              'It has more known moons than any other planet.'] },
+    { name: 'Uranus', au: '19.2', tag: 'The sideways one', accent: 0x8FE3E8, tilt: 97.8, atmo: 0xB8F4F6, faintRing: true,
+      css: 'radial-gradient(circle at 35% 30%, #D6FAFB, #8FDCE0 55%, #3F8D93)',
+      facts: ['It rolls around the Sun on its side, tilted about 98°.',
+              'The first planet found with a telescope, by William Herschel in 1781.',
+              'Each pole gets about 42 years of sunlight, then 42 years of darkness.'] },
+    { name: 'Neptune', au: '30.1', tag: 'The windy one', accent: 0x5B83FF, tilt: 28.3, atmo: 0x7FA2FF,
+      css: 'radial-gradient(circle at 35% 30%, #A9BEFF, #3A63D8 55%, #142A73)',
+      facts: ['Winds here top 2,000 km/h, the fastest in the solar system.',
+              'One year on Neptune lasts about 165 Earth years.',
+              'It was found with maths before anyone spotted it through a telescope.'] }
+  ];
+  let planetCount = 0; // how many planets have been revealed this page load
 
   const CUES = ['colour', 'shape', 'sound'];
   const DELAYS = ['fixed', 'random'];
@@ -607,6 +697,7 @@ footer { color: var(--muted); font-size: 0.8rem; display: flex; flex-wrap: wrap;
     sheet: $('sheet'), sheetCard: $('sheet-card'),
     pillIcon: $('pill-icon'), pillText: $('pill-text'), attemptText: $('attempt-text'), dots: $('dots'),
     label: $('label'), readout: $('readout'), hint: $('hint'),
+    planetCard: $('planet-card'), pcKicker: $('pc-kicker'), pcDist: $('pc-dist'), pcName: $('pc-name'), pcTag: $('pc-tag'), pcFact: $('pc-fact'),
     start: $('btn-start'), stop: $('btn-stop'), notice: $('notice'), status: $('status'),
     chipRecord: $('chip-record'), chipMode: $('chip-mode'),
     last: $('m-last'), best: $('m-best'), median: $('m-median'), avg: $('m-avg'),
@@ -752,6 +843,37 @@ footer { color: var(--muted); font-size: 0.8rem; display: flex; flex-wrap: wrap;
       this.pending = null;
     },
 
+    // Short sparkly arpeggio played after a valid response. It only ever plays after the cue,
+    // so it can't act as a cue itself.
+    chime() {
+      const c = this.ctx;
+      if (!c || c.state !== 'running') return;
+      const t0 = c.currentTime + 0.005;
+      const out = c.createGain();
+      out.gain.value = 0.18;
+      out.connect(c.destination);
+      // a quick upward "pop"
+      const pop = c.createOscillator(), pg = c.createGain();
+      pop.type = 'sine';
+      pop.frequency.setValueAtTime(320, t0);
+      pop.frequency.exponentialRampToValueAtTime(900, t0 + 0.07);
+      pg.gain.setValueAtTime(0.0001, t0);
+      pg.gain.exponentialRampToValueAtTime(0.9, t0 + 0.01);
+      pg.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.1);
+      pop.connect(pg).connect(out); pop.start(t0); pop.stop(t0 + 0.12);
+      // then three bright notes: G5, D6, G6
+      [[784, 0.05], [1175, 0.11], [1568, 0.17]].forEach(([f, d]) => {
+        const o = c.createOscillator(), g = c.createGain();
+        o.type = 'triangle';
+        o.frequency.setValueAtTime(f, t0 + d);
+        g.gain.setValueAtTime(0.0001, t0 + d);
+        g.gain.exponentialRampToValueAtTime(0.8, t0 + d + 0.008);
+        g.gain.exponentialRampToValueAtTime(0.0001, t0 + d + 0.32);
+        o.connect(g).connect(out); o.start(t0 + d); o.stop(t0 + d + 0.34);
+      });
+      setTimeout(() => { try { out.disconnect(); } catch (_) { /* ignore */ } }, 900);
+    },
+
     test() {
       if (!this.unlock()) return false;
       this.schedule(60);
@@ -779,27 +901,69 @@ footer { color: var(--muted); font-size: 0.8rem; display: flex; flex-wrap: wrap;
     camera.position.set(0, 0.25, 7);
     camera.lookAt(0, 0.45, 0);
 
-    scene.add(new THREE.AmbientLight(0xffffff, 0.5));
-    const key = new THREE.DirectionalLight(0xffffff, 0.85);
+    // Studio reflections for the glossy shapes. Built once from soft panels; no saturated blue,
+    // so the blue colour cue stays the only blue on the shape.
+    const pmrem = new THREE.PMREMGenerator(renderer);
+    const envScene = new THREE.Scene();
+    envScene.background = new THREE.Color(0x16181e);
+    const envBits = [];
+    const panel = (w, h, r, g, b, x, y, z) => {
+      const geo = new THREE.PlaneGeometry(w, h);
+      const mat = new THREE.MeshBasicMaterial({ color: new THREE.Color(r, g, b), side: THREE.DoubleSide });
+      const m = new THREE.Mesh(geo, mat);
+      m.position.set(x, y, z); m.lookAt(0, 0, 0);
+      envScene.add(m); envBits.push(geo, mat);
+    };
+    panel(5, 1.6, 3.0, 2.9, 2.8, 0, 5, 2);     // overhead softbox
+    panel(1.6, 4, 2.0, 1.5, 1.2, -5, 1, 1.5);  // warm side
+    panel(1.6, 4, 1.5, 1.5, 1.6, 5, 0.5, -1);  // neutral side
+    panel(4, 1.2, 2.2, 1.0, 1.8, 0, -4.5, 3);  // pink floor bounce
+    const envRT = track(pmrem.fromScene(envScene, 0.04));
+    envBits.forEach((b) => b.dispose());
+    pmrem.dispose();
+    scene.environment = envRT.texture;
+
+    scene.add(new THREE.AmbientLight(0xffffff, 0.25));
+    const key = new THREE.DirectionalLight(0xffffff, 0.9);
     key.position.set(3, 4, 5);
     scene.add(key);
-    // Neutral rim light. It never changes colour, so it can't leak a cue.
-    const rim = new THREE.PointLight(0xffffff, 0.6, 12);
-    rim.position.set(-3, 1.5, 2.5);
-    scene.add(rim);
+    // Two white sparkle lights circle the shape at a constant speed for moving highlights.
+    // They never change colour or speed, so they can't leak a cue.
+    const spark1 = new THREE.PointLight(0xffffff, 0.8, 9);
+    const spark2 = new THREE.PointLight(0xfff1e0, 0.8, 9);
+    scene.add(spark1, spark2);
 
     const core = new THREE.Group();
     core.position.y = 0.6;
     scene.add(core);
 
+    // Soft backdrop glow behind the shape (constant in every state)
+    const glowCanvas = document.createElement('canvas');
+    glowCanvas.width = glowCanvas.height = 128;
+    const gctx = glowCanvas.getContext('2d');
+    const grad = gctx.createRadialGradient(64, 64, 0, 64, 64, 64);
+    grad.addColorStop(0, 'rgba(255,255,255,1)');
+    grad.addColorStop(0.45, 'rgba(255,255,255,0.35)');
+    grad.addColorStop(1, 'rgba(255,255,255,0)');
+    gctx.fillStyle = grad; gctx.fillRect(0, 0, 128, 128);
+    const glow = new THREE.Sprite(track(new THREE.SpriteMaterial({
+      map: track(new THREE.CanvasTexture(glowCanvas)), color: COLORS.glow,
+      transparent: true, opacity: 0.32, depthWrite: false, blending: THREE.AdditiveBlending
+    })));
+    glow.scale.set(6.5, 6.5, 1);
+    glow.position.set(0, core.position.y, -2.2);
+    scene.add(glow);
+
     // One pre-built object per visual state, toggled by visibility so nothing is created at cue time.
     const shapes = {};
-    const edgeMaterial = track(new THREE.LineBasicMaterial({ color: COLORS.mist, transparent: true, opacity: 0.2 }));
-    function addShape(name, geometry, color) {
+    const edgeMaterial = track(new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.22 }));
+    function addShape(name, geometry, color, extra = {}) {
       const group = new THREE.Group();
-      const material = track(new THREE.MeshStandardMaterial({
-        color, emissive: color, emissiveIntensity: 0.16, roughness: 0.4, metalness: 0.1, flatShading: true
-      }));
+      const material = track(new THREE.MeshPhysicalMaterial(Object.assign({
+        color, emissive: color, emissiveIntensity: 0.22,
+        metalness: 0.2, roughness: 0.32, clearcoat: 1, clearcoatRoughness: 0.05,
+        envMapIntensity: 0.55, flatShading: true
+      }, extra)));
       group.add(new THREE.Mesh(track(geometry), material));
       group.add(new THREE.LineSegments(track(new THREE.EdgesGeometry(geometry, 25)), edgeMaterial));
       group.visible = false;
@@ -807,56 +971,170 @@ footer { color: var(--muted); font-size: 0.8rem; display: flex; flex-wrap: wrap;
       shapes[name] = group;
     }
     const sphereGeo = new THREE.IcosahedronGeometry(1.05, 1);
-    addShape('idle', sphereGeo, COLORS.slate);
-    addShape('cueColour', sphereGeo.clone(), COLORS.signal);        // same shape, colour change only
-    addShape('cueShape', new THREE.BoxGeometry(1.5, 1.5, 1.5), COLORS.slate); // same colour, shape change only
-    addShape('result', new THREE.OctahedronGeometry(1.1, 0), COLORS.mist);
+    addShape('idle', sphereGeo, COLORS.rose);
+    addShape('cueColour', sphereGeo.clone(), COLORS.signal);                  // same shape, colour change only
+    addShape('cueShape', new THREE.BoxGeometry(1.5, 1.5, 1.5), COLORS.rose);  // same colour, shape change only
+
+    /* ---- Planets (shown after a valid response) ---- */
+    function seeded(seed) { // small deterministic RNG so each planet looks the same every time
+      return () => { seed |= 0; seed = (seed + 0x6D2B79F5) | 0; let x = Math.imul(seed ^ (seed >>> 15), 1 | seed); x = (x + Math.imul(x ^ (x >>> 7), 61 | x)) ^ x; return ((x ^ (x >>> 14)) >>> 0) / 4294967296; };
+    }
+    function planetTexture(name) {
+      const W = 512, H = 256;
+      const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+      const g = cv.getContext('2d');
+      const rnd = seeded(name.length * 9973 + name.charCodeAt(0));
+      const bands = (cols, freq, wobble = 0.6) => {
+        for (let y = 0; y < H; y++) {
+          const v = Math.sin(y * freq) + 0.5 * Math.sin(y * freq * 2.7 + 1.3) + wobble * Math.sin(y * freq * 6.1 + 0.4);
+          const i = Math.max(0, Math.min(cols.length - 1, Math.floor((v / (1.5 + wobble) * 0.5 + 0.5) * cols.length)));
+          g.fillStyle = cols[i]; g.fillRect(0, y, W, 1);
+        }
+      };
+      const streaks = (col, n, alpha) => {
+        g.globalAlpha = alpha; g.fillStyle = col;
+        for (let i = 0; i < n; i++) { g.beginPath(); g.ellipse(rnd() * W, rnd() * H, 20 + rnd() * 60, 1 + rnd() * 3, 0, 0, Math.PI * 2); g.fill(); }
+        g.globalAlpha = 1;
+      };
+      const blobs = (col, n, cx, cy, spread, size) => {
+        g.fillStyle = col;
+        for (let i = 0; i < n; i++) { g.beginPath(); g.arc(cx + (rnd() - 0.5) * spread * 2, cy + (rnd() - 0.5) * spread, size * (0.4 + rnd()), 0, Math.PI * 2); g.fill(); }
+      };
+      const caps = (col, h) => { g.fillStyle = col; g.fillRect(0, 0, W, h); g.fillRect(0, H - h, W, h); };
+      switch (name) {
+        case 'Mercury':
+          g.fillStyle = '#9A9187'; g.fillRect(0, 0, W, H);
+          streaks('#B5ADA3', 60, 0.25);
+          for (let i = 0; i < 140; i++) {
+            const x = rnd() * W, y = rnd() * H, r = 2 + rnd() * rnd() * 14;
+            g.fillStyle = 'rgba(60,55,50,0.45)'; g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill();
+            g.strokeStyle = 'rgba(215,208,200,0.35)'; g.lineWidth = 1; g.beginPath(); g.arc(x - 0.6, y - 0.6, r, Math.PI, Math.PI * 1.8); g.stroke();
+          }
+          break;
+        case 'Venus':
+          bands(['#C9A25E', '#E8C987', '#F3DCA6', '#E2BC78'], 0.045, 0.9);
+          streaks('#FFF1CC', 90, 0.22); streaks('#B98A45', 50, 0.15);
+          break;
+        case 'Earth': {
+          g.fillStyle = '#2F6FD6'; g.fillRect(0, 0, W, H);
+          const land = [[90, 95, 50, 13], [130, 175, 30, 11], [255, 85, 45, 12], [270, 150, 30, 12], [375, 80, 65, 13], [420, 175, 22, 9]];
+          land.forEach(([x, y, sp, sz]) => { blobs('#3FA34D', 26, x, y, sp, sz); blobs('#B9A066', 6, x, y, sp * 0.5, sz * 0.6); });
+          caps('#F2F6FA', 14);
+          g.globalAlpha = 0.45; streaks('#FFFFFF', 70, 1); g.globalAlpha = 1;
+          break;
+        }
+        case 'Mars':
+          g.fillStyle = '#C1502E'; g.fillRect(0, 0, W, H);
+          streaks('#D97A4E', 60, 0.35);
+          blobs('rgba(110,40,20,0.55)', 30, 200, 120, 90, 14); blobs('rgba(110,40,20,0.45)', 20, 420, 100, 60, 11);
+          caps('#F4E9E2', 10);
+          break;
+        case 'Jupiter':
+          bands(['#EEDCC0', '#D9B38C', '#B5793F', '#E7CFAE', '#9C6634'], 0.09, 0.5);
+          streaks('#FFF4E2', 80, 0.18);
+          g.fillStyle = '#B4502E'; g.beginPath(); g.ellipse(330, 165, 30, 15, 0, 0, Math.PI * 2); g.fill();
+          g.strokeStyle = 'rgba(255,230,200,0.6)'; g.lineWidth = 3; g.stroke();
+          break;
+        case 'Saturn':
+          bands(['#F3E1B0', '#E3CB8F', '#CDAE6B', '#EAD7A0'], 0.07, 0.4);
+          streaks('#FFF6DA', 50, 0.15);
+          break;
+        case 'Uranus':
+          bands(['#8FDCE0', '#9EE3E6', '#A9E9EB'], 0.04, 0.3);
+          streaks('#E2FCFD', 30, 0.12);
+          break;
+        case 'Neptune':
+          bands(['#2E55C8', '#3A63D8', '#4A74E6', '#3459CC'], 0.06, 0.5);
+          streaks('#9DB6FF', 60, 0.2);
+          g.fillStyle = 'rgba(15,30,90,0.7)'; g.beginPath(); g.ellipse(300, 150, 22, 11, 0, 0, Math.PI * 2); g.fill();
+          break;
+      }
+      return track(new THREE.CanvasTexture(cv));
+    }
+    function ringTexture(stripes) {
+      const S = 512, cv = document.createElement('canvas'); cv.width = cv.height = S;
+      const g = cv.getContext('2d');
+      stripes.forEach(([r0, r1, col]) => {
+        g.beginPath(); g.arc(S / 2, S / 2, r1 * S / 2, 0, Math.PI * 2); g.arc(S / 2, S / 2, r0 * S / 2, 0, Math.PI * 2, true);
+        g.fillStyle = col; g.fill('evenodd');
+      });
+      return track(new THREE.CanvasTexture(cv));
+    }
+    const planetRoot = new THREE.Group();
+    planetRoot.position.y = core.position.y;
+    planetRoot.visible = false;
+    scene.add(planetRoot);
+    const planetGeo = track(new THREE.SphereGeometry(1.08, 64, 40));
+    const atmoGeo = track(new THREE.SphereGeometry(1.17, 48, 32));
+    const planetMeshes = PLANETS.map((pl) => {
+      const tiltGroup = new THREE.Group();
+      tiltGroup.rotation.set(0.32, 0, -THREE.MathUtils.degToRad(pl.tilt));
+      const spin = new THREE.Group();
+      tiltGroup.add(spin);
+      spin.add(new THREE.Mesh(planetGeo, track(new THREE.MeshStandardMaterial({
+        map: planetTexture(pl.name), color: 0xd4d4d4, roughness: 0.9, metalness: 0, envMapIntensity: 0.25
+      }))));
+      if (pl.atmo) {
+        tiltGroup.add(new THREE.Mesh(atmoGeo, track(new THREE.MeshBasicMaterial({
+          color: pl.atmo, transparent: true, opacity: 0.16, side: THREE.BackSide, blending: THREE.AdditiveBlending, depthWrite: false
+        }))));
+      }
+      if (pl.rings || pl.faintRing) {
+        const outer = pl.rings ? 2.15 : 1.75, inner = pl.rings ? 1.35 : 1.6;
+        const tex = pl.rings
+          ? ringTexture([[0.63, 0.70, 'rgba(200,170,120,0.45)'], [0.70, 0.84, 'rgba(240,220,170,0.9)'], [0.84, 0.86, 'rgba(0,0,0,0)'], [0.86, 0.97, 'rgba(215,190,140,0.75)'], [0.97, 1.0, 'rgba(190,165,120,0.35)']])
+          : ringTexture([[0.91, 0.96, 'rgba(220,250,252,0.55)']]);
+        const ring = new THREE.Mesh(track(new THREE.RingGeometry(inner, outer, 128)), track(new THREE.MeshBasicMaterial({
+          map: tex, transparent: true, side: THREE.DoubleSide, depthWrite: false
+        })));
+        ring.rotation.x = Math.PI / 2;
+        tiltGroup.add(ring);
+      }
+      tiltGroup.visible = false;
+      planetRoot.add(tiltGroup);
+      return { group: tiltGroup, spin };
+    });
+    shapes.result = planetRoot;
+    let activePlanet = 0;
+    let spinBoost = 0;
+
     addShape('error', new THREE.TetrahedronGeometry(1.25, 0), COLORS.amber);
 
     // Halo: neutral except for the colour cue and false starts
-    const haloMaterial = track(new THREE.MeshBasicMaterial({ color: COLORS.slate, transparent: true, opacity: 0.35, side: THREE.DoubleSide }));
-    const halo = new THREE.Mesh(track(new THREE.RingGeometry(1.8, 1.84, 96)), haloMaterial);
+    const haloMaterial = track(new THREE.MeshBasicMaterial({ color: COLORS.slate, transparent: true, opacity: 0.5, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, depthWrite: false }));
+    const halo = new THREE.Mesh(track(new THREE.RingGeometry(1.78, 1.86, 128)), haloMaterial);
     halo.position.y = core.position.y;
     halo.rotation.x = Math.PI * 0.42;
     scene.add(halo);
-    const HALO = { idle: COLORS.slate, cueColour: COLORS.signal, cueShape: COLORS.slate, result: COLORS.mist, error: COLORS.amber };
+    const HALO = { idle: COLORS.rose, cueColour: COLORS.signal, cueShape: COLORS.rose, result: COLORS.mist, error: COLORS.amber };
 
-    // Quiet orbiting shapes. Their speed never changes, so they can't hint at the cue.
-    const orbit = new THREE.Group();
-    orbit.position.y = core.position.y;
-    orbit.rotation.x = 0.38;
-    scene.add(orbit);
-    const orbitMaterial = track(new THREE.MeshStandardMaterial({ color: COLORS.line, emissive: COLORS.line, emissiveIntensity: 0.4, roughness: 0.6, flatShading: true }));
-    const orbitGeos = [
-      track(new THREE.BoxGeometry(0.2, 0.2, 0.2)),
-      track(new THREE.IcosahedronGeometry(0.15, 0)),
-      track(new THREE.OctahedronGeometry(0.17, 0))
-    ];
-    for (let i = 0; i < 9; i++) {
-      const m = new THREE.Mesh(orbitGeos[i % 3], orbitMaterial);
-      const a = (i / 9) * Math.PI * 2;
-      m.position.set(Math.cos(a) * 2.8, Math.sin(i * 1.7) * 0.18, Math.sin(a) * 2.8);
-      m.rotation.set(i, i * 0.5, 0);
-      orbit.add(m);
-    }
-
+    // Colourful star field (constant, never reacts to the cue)
     const starGeo = track(new THREE.BufferGeometry());
-    const STARS = 240;
+    const STARS = 320;
     const pos = new Float32Array(STARS * 3);
+    const starCols = new Float32Array(STARS * 3);
+    const starPalette = [COLORS.mist, COLORS.mist, COLORS.rose, COLORS.violet, COLORS.teal, COLORS.amber, COLORS.pink];
+    const sc = new THREE.Color();
     for (let i = 0; i < STARS; i++) {
       pos[i * 3] = (Math.random() - 0.5) * 20;
       pos[i * 3 + 1] = (Math.random() - 0.5) * 11;
       pos[i * 3 + 2] = -2 - Math.random() * 7;
+      sc.setHex(starPalette[i % starPalette.length]);
+      starCols.set([sc.r, sc.g, sc.b], i * 3);
     }
     starGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-    const stars = new THREE.Points(starGeo, track(new THREE.PointsMaterial({ color: COLORS.slate, size: 0.035, transparent: true, opacity: 0.4 })));
+    starGeo.setAttribute('color', new THREE.BufferAttribute(starCols, 3));
+    const starMaterial = track(new THREE.PointsMaterial({ size: 0.045, vertexColors: true, transparent: true, opacity: 0.6, depthWrite: false }));
+    const stars = new THREE.Points(starGeo, starMaterial);
     scene.add(stars);
 
     // Warm-up: compile every shader and upload every buffer now, so the cue frame never stalls.
     Object.values(shapes).forEach((s) => { s.visible = true; });
+    planetMeshes.forEach((p) => { p.group.visible = true; });
     renderer.compile(scene, camera);
     renderer.render(scene, camera);
     Object.values(shapes).forEach((s) => { s.visible = false; });
+    planetMeshes.forEach((p) => { p.group.visible = false; });
     core.rotation.set(0.45, 0.7, 0);
 
     let current = null;
@@ -875,9 +1153,16 @@ footer { color: var(--muted); font-size: 0.8rem; display: flex; flex-wrap: wrap;
         current = name;
         for (const k in shapes) shapes[k].visible = k === name;
         haloMaterial.color.setHex(HALO[name]);
+        halo.visible = name !== 'result'; // planets get no halo, so only Saturn and Uranus show rings
+        if (name === 'result') {
+          activePlanet = opts.planet || 0;
+          planetMeshes.forEach((p, i) => { p.group.visible = i === activePlanet; });
+          spinBoost = motion() ? 1 : 0; // quick twirl as the shape turns into a planet
+        }
         // Cues swap on a single frame at full size. Other states ease in.
-        scale = !motion() || opts.instant ? 1 : 0.6;
+        scale = !motion() || opts.instant ? 1 : (name === 'result' ? 0.25 : 0.6);
         core.scale.setScalar(scale);
+        planetRoot.scale.setScalar(scale);
       },
       shake() { if (motion()) shakeT = 1; },
       update(dt) {
@@ -885,12 +1170,24 @@ footer { color: var(--muted); font-size: 0.8rem; display: flex; flex-wrap: wrap;
         if (motion()) {
           core.rotation.y += dt * 0.5;
           core.rotation.x += dt * 0.2;
-          orbit.rotation.y += dt * 0.12;
           halo.rotation.z += dt * 0.2;
           stars.rotation.y += dt * 0.008;
+          starMaterial.opacity = 0.5 + Math.sin(t * 1.3) * 0.12;
+          // Gentle float, same in every state
+          const bob = Math.sin(t * 1.6) * 0.08;
+          core.position.y = 0.6 + bob;
+          halo.position.y = 0.6 + bob;
+          planetRoot.position.y = 0.6 + bob;
+          if (current === 'result') {
+            spinBoost = Math.max(0, spinBoost - dt * 1.4);
+            planetMeshes[activePlanet].spin.rotation.y += dt * (0.35 + spinBoost * spinBoost * 9);
+          }
         }
-        scale += (1 - scale) * (1 - Math.exp(-dt * 10));
+        spark1.position.set(Math.cos(t * 0.9) * 3, 1.6 + Math.sin(t * 0.7) * 0.6, Math.sin(t * 0.9) * 3);
+        spark2.position.set(Math.cos(-t * 0.6 + 2) * 3.2, -0.4, Math.sin(-t * 0.6 + 2) * 3.2);
+        scale += (1 - scale) * (1 - Math.exp(-dt * (current === 'result' ? 6 : 10)));
         core.scale.setScalar(scale);
+        planetRoot.scale.setScalar(scale);
         if (shakeT > 0) {
           shakeT = Math.max(0, shakeT - dt * 2.2);
           core.position.x = Math.sin(t * 55) * 0.16 * shakeT;
@@ -921,10 +1218,11 @@ footer { color: var(--muted); font-size: 0.8rem; display: flex; flex-wrap: wrap;
     return {
       kind: 'fallback',
       label: '2D view (no WebGL)',
-      setState(name) {
+      setState(name, opts = {}) {
         if (name === current) return;
         current = name;
         el.fallback.dataset.shape = name;
+        el.fallback.style.background = name === 'result' ? PLANETS[opts.planet || 0].css : '';
       },
       shake() {
         if (!motion()) return;
@@ -1097,9 +1395,22 @@ footer { color: var(--muted); font-size: 0.8rem; display: flex; flex-wrap: wrap;
     el.pillText.textContent = text;
   }
 
+  function showPlanetCard(i) {
+    const pl = PLANETS[i];
+    el.planetCard.style.setProperty('--accent', '#' + pl.accent.toString(16).padStart(6, '0'));
+    el.pcKicker.textContent = `✦ Planet ${i + 1} of ${PLANETS.length}`;
+    el.pcDist.textContent = `${pl.au} AU from the Sun`;
+    el.pcName.textContent = pl.name;
+    el.pcTag.textContent = pl.tag;
+    el.pcFact.textContent = pl.facts[Math.floor(Math.random() * pl.facts.length)];
+    el.planetCard.hidden = false;
+    return pl;
+  }
+
   function setState(next, info = {}) {
     game.state = next;
     el.stage.dataset.state = next;
+    if (next !== S.RESULT) el.planetCard.hidden = true;
     el.sheet.hidden = !SHEET_STATES.has(next);
     const cue = run ? run.cue_type : null;
     const phrase = cue ? CUE_PHRASE[cue] : '';
@@ -1126,22 +1437,26 @@ footer { color: var(--muted); font-size: 0.8rem; display: flex; flex-wrap: wrap;
           announce(cue === 'sound' ? 'Listen for the tone.' : 'Wait for the cue.');
         }
         break;
-      case S.RESULT:
-        setVisual('result');
+      case S.RESULT: {
+        const planetIdx = info.planet || 0;
+        setVisual('result', { planet: planetIdx });
+        const pl = showPlanetCard(planetIdx);
+        const planetSay = ` You reached ${pl.name}. ${el.pcFact.textContent}`;
         setPill('✓', 'Recorded');
         if (run.feedback_type === 'immediate') {
           el.label.textContent = `Attempt ${run.valid_count} of ${CONFIG.attemptsPerRun}`;
           el.readout.className = 'readout';
           el.readout.innerHTML = msHTML(info.rt);
-          announce(`${round(info.rt)} milliseconds.`);
+          announce(`${round(info.rt)} milliseconds.${planetSay}`);
         } else {
           el.label.textContent = `Attempt ${run.valid_count} of ${CONFIG.attemptsPerRun}`;
           el.readout.className = 'readout word';
           el.readout.textContent = 'Recorded';
-          announce('Attempt recorded.');
+          announce(`Attempt recorded.${planetSay}`);
         }
         el.hint.textContent = game.finishing ? 'Round complete.' : 'Press Space or tap for the next attempt.';
         break;
+      }
       case S.FALSE:
         setVisual('error');
         visuals.shake();
@@ -1263,12 +1578,14 @@ footer { color: var(--muted); font-size: 0.8rem; display: flex; flex-wrap: wrap;
       cue_frame_ms: game.cueFrameMs != null ? +game.cueFrameMs.toFixed(1) : null
     });
     run.valid_count++;
+    audio.chime();
+    const planet = planetCount++ % PLANETS.length;
     if (run.valid_count >= CONFIG.attemptsPerRun) {
       game.finishing = true;
-      setState(S.RESULT, { rt });
-      setTimeout(() => { game.finishing = false; showRating(); }, 1200);
+      setState(S.RESULT, { rt, planet });
+      setTimeout(() => { game.finishing = false; showRating(); }, 2600); // long enough to read the planet card
     } else {
-      setState(S.RESULT, { rt });
+      setState(S.RESULT, { rt, planet });
     }
   }
 
@@ -1446,7 +1763,7 @@ footer { color: var(--muted); font-size: 0.8rem; display: flex; flex-wrap: wrap;
         if (!audio.test()) showNotice('This browser could not play sound.');
         break;
       case 'begin':
-        if (run.cue_type === 'sound') audio.unlock(); // unlock audio on this gesture
+        audio.unlock(); // unlock audio on this gesture (sound cue and hit chime)
         setState(S.READY);
         el.stage.focus({ preventScroll: true });
         break;
