@@ -4,9 +4,11 @@
 
 Wait for the cue, react as fast as you can, and discover a planet with every good reaction. Behind the game is a small study: how do the *type of cue* and the *timing of feedback* affect reaction speed and how fair the game feels?
 
-Built by Bryan Burrows as a UX research portfolio piece.
+Designed by Bryan Burrows as a UX research portfolio piece, and built with AI coding assistants.
 
 ### ▶ [Play it live](https://bryantheburrows.github.io/reaction-game/)
+
+![Reflex Lab start screen: the consent card for the reaction-time study, beside the "Your results" panel and score bands](docs/screenshot.jpg)
 
 ---
 
@@ -20,6 +22,7 @@ Built by Bryan Burrows as a UX research portfolio piece.
 - [Data and privacy](#data-and-privacy)
 - [Accessibility](#accessibility)
 - [Tech stack](#tech-stack)
+- [How it was built](#how-it-was-built)
 - [Project structure](#project-structure)
 - [Customising](#customising)
 - [Credits](#credits)
@@ -162,13 +165,26 @@ Typical adult simple reaction time is about 200–250 ms.
 
 ---
 
+## How it was built
+
+I designed the study, the game and the interface, and I built them with AI coding assistants. I directed the work in small, reviewable steps and tested each change in the browser. Each step is one commit in this repository's history.
+
+The hard parts were research decisions rather than visual ones:
+
+- **Timing you can trust.** Cue timestamps come from the rendered frame, not the timer, and the diagnostics panel reports drift so a session with bad timing can be spotted.
+- **A fair comparison.** Only the cue changes at cue onset, and rewards appear only after a valid reaction, so the background, chime and planets can't influence results.
+- **Consent first.** There's no recording without consent, and practice mode is always available.
+
+---
+
 ## Project structure
 
 ```
-reflex-lab/
-├── index.html    The whole game: markup, styles and scripts
-├── favicon.svg   Browser tab icon
-└── README.md     This file
+reaction-game/
+├── index.html           The whole game: markup, styles and scripts
+├── favicon.svg          Browser tab icon
+├── docs/screenshot.jpg  Screenshot used in this README
+└── README.md            This file
 ```
 
 ---
@@ -194,5 +210,11 @@ Most settings live in the `CONFIG` object near the top of the main script in `in
 ## Credits
 
 - Design, research and direction: **Bryan Burrows**
-- Built with help from Claude (Anthropic)
+- Built with AI coding assistants (Claude by Anthropic)
 - Planet facts are drawn from widely published NASA and ESA figures. The exoplanet looks are artist's impressions, since none of them has been photographed up close.
+
+---
+
+## License
+
+[MIT](LICENSE) © Bryan Burrows
